@@ -1,0 +1,247 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { useSearchParams, useRouter } from "next/navigation";
+import { getGuestTokenForOrder } from "@/utils/checkout";
+
+const BreadcrumbBanner = dynamic(() => import("@/components/BreadcrumbBanner"), { ssr: false });
+
+type Order = any;
+
+function formatMoney(v: string | number | null | undefined) {
+  if (v == null) return "—";
+  const n = typeof v === "string" ? parseFloat(v) : Number(v);
+  if (!isFinite(n)) return "—";
+  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(n);
+}
+
+export default function OrderSuccessPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  // ✅ Get order number from query string
+  const orderNumber = searchParams?.get("order") ?? "";
+
+  useEffect(() => {
+    if (!orderNumber) {
+      setErr("Missing order number in URL");
+      setLoading(false);
+      return;
+    }
+
+    let canceled = false;
+    async function load() {
+      setLoading(true);
+      setErr(null);
+
+      try {
+        let token = searchParams?.get("token") ?? null;
+        if (!token) token = getGuestTokenForOrder(orderNumber);
+
+        // ✅ Use correct base URL (don’t strip /api)
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7121/api";
+        const url = `${apiBase}/orders/${encodeURIComponent(orderNumber)}${
+          token ? `?token=${encodeURIComponent(token)}` : ""
+        }`;
+
+        const res = await fetch(url, { credentials: "include" });
+        const j = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(j?.error || `Status ${res.status}`);
+
+        const data = j?.data ?? j;
+        if (!canceled) setOrder(data);
+      } catch (e: any) {
+        if (!canceled) setErr(String(e?.message ?? e));
+      } finally {
+        if (!canceled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      canceled = true;
+    };
+  }, [orderNumber, searchParams]);
+
+  const banner = (
+    <BreadcrumbBanner
+      title={`Order ${orderNumber ? `#${orderNumber}` : "Details"}`}
+      breadcrumbs={[
+        { label: "Home", href: "/" },
+        { label: "Orders", href: "/orders" },
+        { label: orderNumber ? `#${orderNumber}` : "Order" },
+      ]}
+      background="/products-banner.jpg"
+    />
+  );
+
+  if (loading) {
+    return (
+      <>
+        {banner}
+        <div className="min-h-[50vh] flex items-center justify-center p-8">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600" />
+            <div className="mt-4 text-gray-600 font-medium">Loading order…</div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (err) {
+    return (
+      <>
+        {banner}
+        <div className="p-8 text-red-600 max-w-4xl mx-auto">{`Error: ${err}`}</div>
+      </>
+    );
+  }
+
+  if (!order) {
+    return (
+      <>
+        {banner}
+        <div className="min-h-[50vh] flex flex-col items-center justify-center text-center p-8">
+          <p className="text-xl text-gray-700 font-medium mb-3">
+            Sorry, we couldn’t find that order.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="mt-2 px-5 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+          >
+            Back to Home
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  /* ✅ Address Mapping */
+  const ship = order.shippingAddress ?? {};
+  const addrLine1 =
+    ship.street ??
+    ship.line1 ??
+    ship.addressLine1 ??
+    null;
+  const addrLine2 = ship.line2 ?? ship.addressLine2 ?? null;
+  const city = ship.city ?? null;
+  const state = ship.state ?? null;
+  const postalCode = ship.postalCode ?? "";
+  const country = ship.country ?? "Canada";
+
+  const subtotal = Number(order.subtotal ?? 0);
+  const shipping = Number(order.shipping ?? 0);
+  const tax = Number(order.tax ?? 0);
+  const discount = Number(order.discount ?? 0);
+  const grandTotal = Number(order.grandTotal ?? subtotal + shipping + tax - discount);
+
+  const invoiceUrl = order.invoicePdfPath
+    ? `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:7121/api").replace(/\/api$/, "")}/uploads/invoices/${order.invoicePdfPath}`
+    : null;
+
+  return (
+    <>
+      {banner}
+
+      <div className="max-w-4xl mx-auto mt-6 mb-2 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md text-center">
+        🎉 Order <strong>#{order.orderNumber}</strong> placed successfully!
+      </div>
+
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Customer Info */}
+        <section className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <h2 className="font-semibold mb-2">Customer</h2>
+            <div><strong>Name:</strong> {order.customerName}</div>
+            <div><strong>Email:</strong> {order.customerEmail}</div>
+            <div><strong>Phone:</strong> {order.customerPhone}</div>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <h2 className="font-semibold mb-2">Shipping Address</h2>
+            <div>{addrLine1 ?? "—"}</div>
+            {addrLine2 && <div>{addrLine2}</div>}
+            <div>{city ? `${city}${state ? ", " + state : ""}` : state ?? "—"}</div>
+            <div>{postalCode ? `Postal: ${postalCode}` : "Postal: —"}</div>
+            <div>{country ? `Country: ${country}` : "Country: —"}</div>
+          </div>
+        </section>
+
+        {/* Items */}
+        <section className="mb-6">
+          <h2 className="text-lg font-semibold mb-3">Items</h2>
+          <ul className="space-y-3">
+            {(order.items || []).map((it: any) => (
+              <li
+                key={it.id}
+                className="bg-white rounded-lg p-4 shadow-sm flex justify-between"
+              >
+                <div>
+                  <div className="font-semibold">{it.productName}</div>
+                  {it.sku && (
+                    <div className="text-sm text-gray-500">SKU: {it.sku}</div>
+                  )}
+                </div>
+                <div className="text-right text-sm">
+                  <div>{formatMoney(it.price)}</div>
+                  <div>Qty: {it.quantity}</div>
+                  <div className="font-semibold">{formatMoney(it.total)}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Totals */}
+        <section className="bg-white rounded-lg p-4 shadow-sm">
+          <h3 className="font-semibold mb-3">Order Summary</h3>
+          <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
+            <div>Subtotal</div><div className="text-right">{formatMoney(subtotal)}</div>
+            <div>Shipping</div><div className="text-right">{formatMoney(shipping)}</div>
+            <div>Tax</div><div className="text-right">{formatMoney(tax)}</div>
+            <div>Discount</div><div className="text-right">-{formatMoney(discount)}</div>
+            <div className="text-lg font-semibold pt-2">Grand Total</div>
+            <div className="text-lg font-semibold text-right pt-2">{formatMoney(grandTotal)}</div>
+          </div>
+        </section>
+
+        {/* Invoice */}
+        {invoiceUrl && (
+          <section className="mt-6 bg-white rounded-lg p-4 shadow-sm">
+            <h3 className="font-semibold mb-2">Invoice</h3>
+            <a
+              href={invoiceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber-600 hover:underline"
+            >
+              Download Invoice (PDF)
+            </a>
+          </section>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={() => router.push("/")}
+            className="px-4 py-2 border rounded bg-white hover:shadow"
+          >
+            Continue Shopping
+          </button>
+          <button
+            onClick={() => navigator.clipboard?.writeText(window.location.href)}
+            className="px-4 py-2 border rounded bg-white hover:shadow"
+          >
+            Copy Order Link
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}

@@ -1,0 +1,171 @@
+/* -------------------------------------------- */
+/* 🌟 GLOBAL STYLES — Laundry24 (Next.js + Tailwind) */
+/* -------------------------------------------- */
+
+/* ✅ Tailwind core first */
+@import "tailwindcss";
+
+/* -------------------------------------------- */
+/* 🎨 Root Variables (Brand Colors & Fonts) */
+/* -------------------------------------------- */
+:root {
+  --background: #fafafa;
+  --foreground: #1f2937; /* Charcoal Gray */
+
+  /* Laundry24 Brand Colors */
+  --primary: #f59e0b;   /* Bright Orange */
+  --secondary: #fbbf24; /* Warm Golden Accent */
+  --dark: #1f2937;      /* Charcoal for Text/Nav */
+  --muted: #6b7280;     /* Neutral Gray */
+  --light: #ffffff;     /* Clean White */
+
+  /* Navbar Heights */
+  --nav-height: 64px;
+  --nav-height-scrolled: 48px;
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans, Arial, Helvetica, sans-serif);
+  --font-mono: var(--font-geist-mono, monospace);
+
+  /* Always light mode */
+  color-scheme: light;
+}
+
+/* -------------------------------------------- */
+/* 🧩 Tailwind Theme Integration */
+/* -------------------------------------------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-dark: var(--dark);
+  --color-muted: var(--muted);
+  --color-light: var(--light);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+/* -------------------------------------------- */
+/* 🧼 Global Reset */
+/* -------------------------------------------- */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+}
+
+/* -------------------------------------------- */
+/* 🧍 Body Styling */
+/* -------------------------------------------- */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  padding-top: env(safe-area-inset-top);
+}
+
+/* -------------------------------------------- */
+/* 📝 Headings */
+/* -------------------------------------------- */
+main h1,
+main h2,
+main h3,
+main h4,
+main h5,
+main h6 {
+  color: var(--dark);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* -------------------------------------------- */
+/* 🔗 Links */
+/* -------------------------------------------- */
+a {
+  color: var(--primary);
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+a:hover {
+  color: var(--secondary);
+}
+
+/* -------------------------------------------- */
+/* 🔘 Buttons */
+/* -------------------------------------------- */
+.btn-primary {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+.btn-primary:hover {
+  background-color: var(--secondary);
+  transform: translateY(-1px);
+}
+
+.btn-dark {
+  background-color: var(--dark);
+  color: #fff;
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+.btn-dark:hover {
+  background-color: var(--muted);
+}
+
+/* -------------------------------------------- */
+/* 🧭 Navbar Helpers */
+/* -------------------------------------------- */
+.site-header {
+  height: var(--nav-height);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  transition:
+    transform 300ms ease,
+    height 250ms ease,
+    backdrop-filter 250ms ease,
+    box-shadow 250ms ease;
+  will-change: transform;
+}
+
+.site-header.scrolled {
+  height: var(--nav-height-scrolled);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  background: rgba(31, 41, 55, 0.85);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+body.has-fixed-navbar main {
+  padding-top: var(--nav-height);
+}
+
+body.has-fixed-navbar.navbar-scrolled main {
+  padding-top: var(--nav-height-scrolled);
+}
+
+/* -------------------------------------------- */
+/* ♿ Accessibility Utility */
+/* -------------------------------------------- */
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
