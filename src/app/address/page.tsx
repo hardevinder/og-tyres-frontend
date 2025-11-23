@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, CheckCircle2, Shirt, Calendar, ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -33,9 +33,8 @@ const SERVICABLE_LOCATIONS = [
   "Mayo",
   "Faro",
   "Teslin",
-  "Yukon"
+  "Yukon",
 ];
-
 
 export default function AddressPage() {
   const router = useRouter();
@@ -79,14 +78,16 @@ export default function AddressPage() {
     setPlaceDetails(place);
 
     if (!isServicable) {
-      setError("Sorry! We currently serve only the Metro Vancouver Area.");
+      setError(
+        "Sorry! We currently serve only selected areas in Metro Vancouver & Yukon."
+      );
     }
   };
 
   /* ---------------- Save Address & Continue ---------------- */
   const handleContinue = () => {
     if (!address || !isValid || !placeDetails) {
-      setError("Please enter a valid address in Metro Vancouver Area.");
+      setError("Please enter a valid address in our service area.");
       return;
     }
 
@@ -143,34 +144,36 @@ export default function AddressPage() {
         <div className="max-w-7xl mx-auto">
           {/* 🧭 Progress Bar */}
           <div className="mb-12">
-            <div className="relative flex items-center">
+            <div className="flex items-center">
               {steps.map((step, index) => (
-                <div key={step} className="flex-1 flex flex-col items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      index <= currentStep
-                        ? "bg-amber-500 text-white"
-                        : "bg-gray-200 text-gray-500"
-                    }`}
-                  >
-                    {index < currentStep ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : (
-                      stepIcons[index]
-                    )}
+                <React.Fragment key={step}>
+                  <div className="flex flex-col items-center min-w-0 flex-1">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center relative z-10 transition-colors ${
+                        index <= currentStep
+                          ? "bg-amber-500 text-white"
+                          : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {index < currentStep ? (
+                        <CheckCircle2 className="w-5 h-5" />
+                      ) : (
+                        stepIcons[index]
+                      )}
+                    </div>
                   </div>
 
                   {index < steps.length - 1 && (
-                    <motion.div
-                      className="absolute top-5 left-0 right-0 h-1 bg-gray-200"
-                      initial={false}
-                      animate={{
-                        background: index < currentStep ? "#F59E0B" : "#E5E7EB",
-                      }}
-                      transition={{ duration: 0.5 }}
-                    />
+                    <div className="flex-1 h-1 bg-gray-200 mx-0">
+                      <motion.div
+                        className="h-full bg-amber-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: index < currentStep ? "100%" : "0%" }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                      />
+                    </div>
                   )}
-                </div>
+                </React.Fragment>
               ))}
             </div>
             <div className="flex justify-between mt-4">
@@ -196,7 +199,7 @@ export default function AddressPage() {
               Enter Your Address
             </h1>
             <p className="text-gray-600 mb-6">
-              We’ll check if your area is within our service range.
+              We&apos;ll check if your area is within our service range.
             </p>
 
             {loadError && (

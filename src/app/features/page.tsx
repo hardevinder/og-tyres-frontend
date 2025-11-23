@@ -71,17 +71,20 @@ const stats = [
 
 const testimonials = [
   {
-    quote: "This service has transformed my busy routine—professional, eco-conscious, and always impeccable results!",
+    quote:
+      "This service has transformed my busy routine—professional, eco-conscious, and always impeccable results!",
     author: "Sarah L., Marketing Executive",
     rating: 5,
   },
   {
-    quote: "Reliable pickups, gentle care for delicates, and that fresh scent every time. Highly recommend!",
+    quote:
+      "Reliable pickups, gentle care for delicates, and that fresh scent every time. Highly recommend!",
     author: "Raj Patel, Entrepreneur",
     rating: 5,
   },
   {
-    quote: "From suits to linens, everything arrives wrinkle-free and pristine. True value for money.",
+    quote:
+      "From suits to linens, everything arrives wrinkle-free and pristine. True value for money.",
     author: "Emily Chen, Designer",
     rating: 5,
   },
@@ -137,7 +140,10 @@ export default function FeaturesPage() {
               Redefining Clean with Precision and Care
             </h1>
             <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-              Discover a world where laundry is not just cleaned, but transformed. We blend cutting-edge technology, sustainable innovation, and meticulous attention to detail—delivering wardrobe perfection that fits seamlessly into your life.
+              Discover a world where laundry is not just cleaned, but transformed. We
+              blend cutting-edge technology, sustainable innovation, and meticulous
+              attention to detail—delivering wardrobe perfection that fits seamlessly
+              into your life.
             </p>
           </motion.div>
 
@@ -163,7 +169,9 @@ export default function FeaturesPage() {
                   <h3 className="text-2xl font-semibold text-[#001f3f] mb-4 group-hover:text-[#EA580C] transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 text-base leading-relaxed">{feature.desc}</p>
+                  <p className="text-gray-600 text-base leading-relaxed">
+                    {feature.desc}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -178,9 +186,14 @@ export default function FeaturesPage() {
             className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 text-center"
           >
             {stats.map((stat, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-50">
+              <div
+                key={idx}
+                className="bg-white rounded-2xl p-8 shadow-sm border border-gray-50"
+              >
                 <div className="text-[#EA580C] mb-4">{stat.icon}</div>
-                <h3 className="text-4xl font-bold text-[#001f3f] mb-2">{stat.number}</h3>
+                <h3 className="text-4xl font-bold text-[#001f3f] mb-2">
+                  {stat.number}
+                </h3>
                 <p className="text-gray-600 font-medium">{stat.label}</p>
               </div>
             ))}
@@ -201,11 +214,15 @@ export default function FeaturesPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#001f3f]/80 via-[#001f3f]/60 to-transparent" />
             <div className="relative z-10 p-8 md:p-16 text-center text-white max-w-4xl mx-auto">
-              <h2 className="text-4xl md:text-5xl font-bold mb-8 leading-tight">
-                Immaculate Laundry, Impeccable Impact
-              </h2>
-              <p className="text-xl leading-relaxed">
-                Beyond superior cleaning, we're stewards of sustainability. Our closed-loop water systems and carbon-neutral operations ensure every load contributes to a healthier planet—without compromising on luxury.
+           <h2 className="text-4xl md:text-5xl font-bold mb-8 leading-tight text-white dark:text-white !text-white !dark:text-white">
+            Immaculate Laundry, Impeccable Impact
+          </h2>
+
+              <p className="text-xl leading-relaxed text-white dark:text-white">
+                Beyond superior cleaning, we're stewards of sustainability. Our
+                closed-loop water systems and carbon-neutral operations ensure every
+                load contributes to a healthier planet—without compromising on
+                luxury.
               </p>
             </div>
           </motion.div>
@@ -223,14 +240,24 @@ export default function FeaturesPage() {
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {testimonials.map((testimonial, idx) => (
-                <div key={idx} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-50">
+                <div
+                  key={idx}
+                  className="bg-white rounded-2xl p-8 shadow-sm border border-gray-50"
+                >
                   <div className="flex mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-[#EA580C] fill-[#EA580C]" />
+                      <Star
+                        key={i}
+                        className="h-5 w-5 text-[#EA580C] fill-[#EA580C]"
+                      />
                     ))}
                   </div>
-                  <p className="text-gray-600 italic mb-6 leading-relaxed">"{testimonial.quote}"</p>
-                  <p className="font-semibold text-[#001f3f]">{testimonial.author}</p>
+                  <p className="text-gray-600 italic mb-6 leading-relaxed">
+                    "{testimonial.quote}"
+                  </p>
+                  <p className="font-semibold text-[#001f3f]">
+                    {testimonial.author}
+                  </p>
                 </div>
               ))}
             </div>
@@ -253,7 +280,9 @@ export default function FeaturesPage() {
                   <div className="bg-[#EA580C] text-white rounded-full w-16 h-16 mx-auto mb-6 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform">
                     {step.step}
                   </div>
-                  <h3 className="text-xl font-semibold text-[#001f3f] mb-3">{step.title}</h3>
+                  <h3 className="text-xl font-semibold text-[#001f3f] mb-3">
+                    {step.title}
+                  </h3>
                   <p className="text-gray-600">{step.desc}</p>
                 </div>
               ))}
@@ -273,7 +302,10 @@ export default function FeaturesPage() {
               Our Ironclad Commitment
             </h2>
             <p className="max-w-4xl mx-auto text-xl text-gray-600 leading-relaxed">
-              At the heart of our service is a dedication to excellence. From secure handling to bespoke care instructions, we treat every garment as if it were our own—delivering not just clean clothes, but confidence in every fold.
+              At the heart of our service is a dedication to excellence. From secure
+              handling to bespoke care instructions, we treat every garment as if it
+              were our own—delivering not just clean clothes, but confidence in every
+              fold.
             </p>
           </motion.div>
 
@@ -292,7 +324,7 @@ export default function FeaturesPage() {
               <ul className="space-y-6 text-lg text-gray-700">
                 <li className="flex items-center">
                   <ShieldCheck className="h-6 w-6 text-[#EA580C] mr-3" />
-                  Hypoallergenic Detergents & Natural Softeners
+                  Hypoallergenic Detergents &amp; Natural Softeners
                 </li>
                 <li className="flex items-center">
                   <Shirt className="h-6 w-6 text-[#EA580C] mr-3" />

@@ -3,7 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sun, Moon, CloudSun, CheckCircle2, MapPin, Shirt, Calendar, ShoppingBag } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  CloudSun,
+  CheckCircle2,
+  MapPin,
+  Shirt,
+  Calendar,
+  ShoppingBag,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import BreadcrumbBanner from "@/components/BreadcrumbBanner";
 
@@ -177,7 +186,8 @@ export default function PickupPage() {
                 </div>
 
                 <p className="text-sm text-gray-500 mt-6 leading-relaxed">
-                  “At Laundry24, we make laundry effortless! Our convenient pickup and delivery service ensures your clothes are professionally washed, carefully folded, and returned fresh to your doorstep.”
+                  “At Laundry24, we make laundry effortless! Our convenient pickup and delivery service
+                  ensures your clothes are professionally washed, carefully folded, and returned fresh to your doorstep.”
                 </p>
               </div>
 
@@ -214,7 +224,7 @@ export default function PickupPage() {
                     className="mr-2 accent-teal-600"
                   />
                   <label htmlFor="sameDay" className="text-sm">
-                    Same Day Pickup (+$9.99)
+                    Same Day Pickup (+$6.99)
                   </label>
                 </div>
 

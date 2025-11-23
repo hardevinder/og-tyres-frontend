@@ -13,7 +13,12 @@ export default function LaundryLifestyleBanner() {
         className="absolute inset-0 w-full h-full object-cover"
         initial={{ scale: 1 }}
         animate={{ scale: 1.08 }}
-        transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          repeatType: "reverse",
+          ease: "easeInOut",
+        }}
       />
 
       {/* Gradient Overlay for contrast */}
@@ -25,7 +30,8 @@ export default function LaundryLifestyleBanner() {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-3xl md:text-5xl font-extrabold text-white mb-6 drop-shadow-2xl"
+          className="text-3xl md:text-5xl font-extrabold mb-6 drop-shadow-2xl"
+          style={{ color: "#ffffff" }}  // ✅ ALWAYS WHITE (light + dark mode)
         >
           Fresh Laundry, Easy Living
         </motion.h2>
@@ -34,9 +40,11 @@ export default function LaundryLifestyleBanner() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-lg md:text-xl text-white/90 max-w-3xl leading-relaxed mb-8 drop-shadow"
+          className="text-lg md:text-xl max-w-3xl leading-relaxed mb-8 drop-shadow"
+          style={{ color: "rgba(255,255,255,0.9)" }} // ✅ Soft white in all modes
         >
-          Experience convenience like never before — spotless clothes, fast delivery, and the freedom to focus on what matters most.
+          Experience convenience like never before — spotless clothes, fast
+          delivery, and the freedom to focus on what matters most.
         </motion.p>
 
         <motion.div

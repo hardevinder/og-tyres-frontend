@@ -28,7 +28,7 @@ export default function FAQSection() {
     {
       question: "What payment methods do you accept?",
       answer:
-        "We currently accept credit/debit cards and digital wallet payments.",
+        "We currently accept secure payments via Credit and Debit Cards.",
     },
     {
       question: "Do you offer subscription or corporate plans?",
@@ -77,9 +77,9 @@ export default function FAQSection() {
                 {faq.question}
               </span>
               {openIndex === index ? (
-                <ChevronUp className="text-[#F59E0B] w-6 h-6 transition-transform duration-200" />
+                <ChevronUp className="text-[#003636] w-6 h-6 transition-transform duration-200" />
               ) : (
-                <ChevronDown className="text-[#F59E0B] w-6 h-6 transition-transform duration-200" />
+                <ChevronDown className="text-[#003636] w-6 h-6 transition-transform duration-200" />
               )}
             </button>
 
@@ -98,8 +98,8 @@ export default function FAQSection() {
       </div>
 
       {/* Background Glow */}
-      <div className="absolute -top-20 left-0 w-96 h-96 bg-[#F59E0B]/10 rounded-full blur-3xl opacity-60" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#F59E0B]/15 rounded-full blur-3xl opacity-40" />
+      <div className="absolute -top-20 left-0 w-96 h-96 bg-[#003636]/10 rounded-full blur-3xl opacity-60" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#003636]/15 rounded-full blur-3xl opacity-40" />
     </section>
   );
 }

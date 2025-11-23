@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -23,6 +23,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 import BreadcrumbBanner from "@/components/BreadcrumbBanner";
+
+const SELECTED_VARIANTS_KEY = "selectedVariantIds";
 
 const getApiBaseUrl = () => {
   const env = (process.env.NEXT_PUBLIC_API_URL || "").trim();
@@ -73,6 +75,7 @@ function CheckoutContent() {
   const [phone, setPhone] = useState<string>("");
   const [cart, setCart] = useState<any[]>([]);
   const [placing, setPlacing] = useState(false);
+  const [selectedVariantIds, setSelectedVariantIds] = useState<number[]>([]);
 
   const steps = ["Address", "Services", "Pickup Date/Time", "Checkout"];
   const currentStep = 3;
@@ -89,6 +92,7 @@ function CheckoutContent() {
       const storedAddress = localStorage.getItem("selectedAddress");
       const storedPickup = localStorage.getItem("pickupDetails");
       const storedUser = localStorage.getItem("user");
+      const storedVariants = localStorage.getItem(SELECTED_VARIANTS_KEY);
 
       const addr = storedAddress ? JSON.parse(storedAddress) : null;
       const u = storedUser ? JSON.parse(storedUser) : null;
@@ -102,6 +106,17 @@ function CheckoutContent() {
         setPhone(u.phone);
       } else if (addr?.phone) {
         setPhone(addr.phone);
+      }
+
+      if (storedVariants) {
+        try {
+          const parsed = JSON.parse(storedVariants);
+          if (Array.isArray(parsed)) {
+            setSelectedVariantIds(parsed.map((v) => Number(v)).filter(Boolean));
+          }
+        } catch (err) {
+          console.error("Failed to parse selectedVariantIds", err);
+        }
       }
     } catch (err) {
       console.error("Failed to load local data", err);
@@ -144,6 +159,18 @@ function CheckoutContent() {
     loadCart();
   }, [apiBaseUrl]);
 
+  // ✅ Only use items whose variantId is in selectedVariantIds (current session)
+  const activeCart = useMemo(() => {
+    if (!selectedVariantIds || selectedVariantIds.length === 0) {
+      // If somehow no local selection, show whatever cart has
+      return cart;
+    }
+    return cart.filter((item) => {
+      const vid = item.variant?.id ?? item.variantId;
+      return selectedVariantIds.includes(Number(vid));
+    });
+  }, [cart, selectedVariantIds]);
+
   /* ---------------------- 💳 PLACE ORDER ---------------------- */
   const handlePlaceOrder = async () => {
     if (!stripe || !elements) {
@@ -161,7 +188,7 @@ function CheckoutContent() {
         return;
       }
 
-      if (!cart || cart.length === 0) {
+      if (!activeCart || activeCart.length === 0) {
         toast.error("Your cart is empty!");
         setPlacing(false);
         return;
@@ -173,10 +200,9 @@ function CheckoutContent() {
         return;
       }
 
-      // ✅ Flexible Canada-friendly phone validation
       const cleaned = phone.replace(/[^\d]/g, "");
       if (cleaned.length < 7 || cleaned.length > 15) {
-        toast.error("📞 Please enter a valid phone number (e.g. +1 604 555 0182).");
+        toast.error("📞 Please enter a valid phone number.");
         const input = document.querySelector<HTMLInputElement>('input[type="tel"]');
         if (input) {
           input.classList.add("ring-2", "ring-red-500", "animate-shake");
@@ -204,32 +230,27 @@ function CheckoutContent() {
         return;
       }
 
-      // 🔹 Safe values for name & email (must NOT be empty, backend validation)
       const safeUserName = (user?.name || "").trim() || "Customer";
       const safeUserEmail =
         (user?.email || "").trim() || "laundry24@gmail.com";
 
-      // ✅ Send cart with remarks & full customer/address details
       const payload = {
         paymentMethod: "card",
         stripeToken: result.token.id,
         customer: {
-          // Always use logged-in user's name + email (so "Testing" etc)
           name: safeUserName,
           email: safeUserEmail,
           phone,
           address: {
-            // send everything we have from selectedAddress
             ...(address || {}),
-            // but be sure name/phone exist
             name: address?.name ?? safeUserName,
             phone,
           },
         },
         pickup: pickupDetails,
-        items: cart.map((item) => ({
+        items: activeCart.map((item) => ({
           variantId: item.variant?.id ?? item.variantId,
-          quantity: item.quantity,
+          quantity: 1, // 🔒 Always 1
           remarks: item.remarks || "",
         })),
       };
@@ -386,18 +407,16 @@ function CheckoutContent() {
                   <h3 className="text-lg font-semibold mb-3 text-gray-800">
                     Items in Cart
                   </h3>
-                  {cart.length > 0 ? (
+                  {activeCart.length > 0 ? (
                     <ul className="border border-gray-200 rounded-xl p-4 space-y-3">
-                      {cart.map((item, idx) => (
+                      {activeCart.map((item, idx) => (
                         <li
                           key={idx}
                           className="text-sm border-b border-gray-100 pb-2 last:border-none"
                         >
                           <div className="flex justify-between">
                             <span>{item.variant?.name || "Product"}</span>
-                            <span className="font-medium text-gray-700">
-                              × {item.quantity}
-                            </span>
+                            {/* No quantity / counter in UI */}
                           </div>
                           {item.remarks && (
                             <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
