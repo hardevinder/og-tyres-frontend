@@ -94,7 +94,7 @@ const processSteps = [
   {
     step: 1,
     title: "Schedule Pickup",
-    desc: "Book via our app or website—tell us your preferences and we'll handle the rest.",
+    desc: "Book via our app or website—any time, 24×7. Tell us your preferences and we'll handle the rest.",
   },
   {
     step: 2,
@@ -214,9 +214,9 @@ export default function FeaturesPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#001f3f]/80 via-[#001f3f]/60 to-transparent" />
             <div className="relative z-10 p-8 md:p-16 text-center text-white max-w-4xl mx-auto">
-           <h2 className="text-4xl md:text-5xl font-bold mb-8 leading-tight text-white dark:text-white !text-white !dark:text-white">
-            Immaculate Laundry, Impeccable Impact
-          </h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-8 leading-tight text-white dark:text-white !text-white !dark:text-white">
+                Immaculate Laundry, Impeccable Impact
+              </h2>
 
               <p className="text-xl leading-relaxed text-white dark:text-white">
                 Beyond superior cleaning, we're stewards of sustainability. Our
@@ -356,10 +356,10 @@ export default function FeaturesPage() {
             className="text-center"
           >
             <h3 className="text-3xl font-bold text-[#001f3f] mb-8">
-              Reclaim Your Time—Let Us Perfect Your Wardrobe
+              Reclaim Your Time—Laundry On Your Schedule, 24×7
             </h3>
             <button
-              onClick={() => (window.location.href = "/book-service")}
+              onClick={() => (window.location.href = "/address")}
               className="bg-gradient-to-r from-[#EA580C] to-[#c94a0a] text-white font-semibold px-10 py-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-lg"
             >
               Schedule Your First Pickup Today

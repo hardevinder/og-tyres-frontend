@@ -257,9 +257,10 @@ export default function ServiceShowcasePage() {
                                 className="w-10 h-10 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center">
-                                <IconComponent className="w-5 h-5 text-sky-500" />
+                              <div className="w-10 h-10 rounded-full bg-[#FFF5E6] flex items-center justify-center">
+                                <IconComponent className="w-5 h-5 text-[#F4A23A]" />
                               </div>
+
                             )}
 
                             <div>

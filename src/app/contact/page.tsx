@@ -21,13 +21,6 @@ const LOCATIONS = [
   "Surrey",
 ];
 
-const BUSINESS_HOURS = [
-  { day: "Monday - Friday", time: "8:00 AM - 8:00 PM" },
-  { day: "Saturday", time: "9:00 AM - 6:00 PM" },
-  { day: "Sunday", time: "10:00 AM - 4:00 PM" },
-  { day: "Emergencies", time: "24/7 Support" },
-];
-
 export default function ContactPage() {
   return (
     <>
@@ -55,9 +48,13 @@ export default function ContactPage() {
               className="space-y-8 lg:col-span-1"
             >
               <div>
-                <h2 className="text-4xl font-bold text-[#001f3f] mb-6">Let's Connect</h2>
+                <h2 className="text-4xl font-bold text-[#001f3f] mb-6">
+                  Let's Connect
+                </h2>
                 <p className="text-gray-600 leading-relaxed mb-8">
-                  Whether it's scheduling a pickup, answering questions about our services, or providing feedback, our dedicated team is ready to assist. We're committed to making your experience seamless and exceptional.
+                  Whether it's scheduling a pickup, asking about our services, or
+                  sharing feedback, our team is always here for you. Enjoy truly
+                  flexible, on-your-schedule laundry with 24×7 availability.
                 </p>
               </div>
 
@@ -68,9 +65,12 @@ export default function ContactPage() {
                     <MapPin size={24} className="text-[#EA580C]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[#001f3f] mb-1">Metro Vancouver Coverage</h3>
+                    <h3 className="font-semibold text-[#001f3f] mb-1">
+                      Metro Vancouver Coverage
+                    </h3>
                     <p className="text-gray-600 text-sm">
-                      Proudly serving the Greater Vancouver Area with reliable, doorstep service.
+                      Proudly serving the Greater Vancouver Area with reliable,
+                      doorstep service.
                     </p>
                   </div>
                 </div>
@@ -80,7 +80,10 @@ export default function ContactPage() {
                   <div className="bg-[#EA580C]/10 p-3 rounded-xl">
                     <Mail size={24} className="text-[#EA580C]" />
                   </div>
-                  <a href="mailto:info@laundry24.ca" className="text-[#001f3f] hover:text-[#EA580C] transition">
+                  <a
+                    href="mailto:info@laundry24.ca"
+                    className="text-[#001f3f] hover:text-[#EA580C] transition"
+                  >
                     info@laundry24.ca
                   </a>
                 </div>
@@ -90,25 +93,25 @@ export default function ContactPage() {
                   <div className="bg-[#EA580C]/10 p-3 rounded-xl">
                     <Phone size={24} className="text-[#EA580C]" />
                   </div>
-                  <a href="tel:+16722302211" className="text-[#001f3f] hover:text-[#EA580C] transition">
+                  <a
+                    href="tel:+16722302211"
+                    className="text-[#001f3f] hover:text-[#EA580C] transition"
+                  >
                     +1 (672) 230-2211
                   </a>
                 </div>
 
-                {/* Hours */}
+                {/* 24x7 Availability */}
                 <div className="p-4 bg-white rounded-2xl shadow-sm border border-gray-50">
-                  <h3 className="font-semibold text-[#001f3f] mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold text-[#001f3f] mb-2 flex items-center gap-2">
                     <Clock size={20} className="text-[#EA580C]" />
-                    Business Hours
+                    Available 24×7
                   </h3>
-                  <ul className="space-y-2 text-sm text-gray-600">
-                    {BUSINESS_HOURS.map((hour) => (
-                      <li key={hour.day} className="flex justify-between">
-                        <span>{hour.day}</span>
-                        <span className="font-medium">{hour.time}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    No fixed business hours — we operate round the clock. Schedule
+                    pickups, drop-offs, and get support any time of the day or
+                    night, 7 days a week.
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -141,9 +144,13 @@ export default function ContactPage() {
             viewport={{ once: true }}
             className="text-center mb-20"
           >
-            <h2 className="text-4xl font-bold text-[#001f3f] mb-8">Our Service Footprint</h2>
+            <h2 className="text-4xl font-bold text-[#001f3f] mb-8">
+              Our Service Footprint
+            </h2>
             <p className="text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed">
-              We extend our premium laundry services throughout the vibrant communities of Metro Vancouver, ensuring convenience and quality wherever you are.
+              We extend our premium laundry services throughout the vibrant
+              communities of Metro Vancouver, ensuring convenience and quality
+              wherever you are.
             </p>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
               {LOCATIONS.map((city, idx) => (
@@ -155,8 +162,13 @@ export default function ContactPage() {
                   viewport={{ once: true }}
                   className="group bg-white border border-orange-50 rounded-2xl py-6 px-4 shadow-sm hover:shadow-md hover:border-[#EA580C]/20 transition-all duration-300 flex items-center justify-center"
                 >
-                  <CheckCircle size={20} className="text-[#EA580C] group-hover:scale-110 transition-transform mr-2 opacity-0 group-hover:opacity-100" />
-                  <p className="text-[#001f3f] font-semibold text-lg">{city}</p>
+                  <CheckCircle
+                    size={20}
+                    className="text-[#EA580C] group-hover:scale-110 transition-transform mr-2 opacity-0 group-hover:opacity-100"
+                  />
+                  <p className="text-[#001f3f] font-semibold text-lg">
+                    {city}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -174,10 +186,11 @@ export default function ContactPage() {
               Ready to Simplify Your Laundry Routine?
             </h3>
             <p className="text-gray-600 mb-8 max-w-xl mx-auto">
-              Join thousands of satisfied customers who've made the switch to effortless, professional care.
+              Schedule a pickup any time that suits you. Laundry on your timing —
+              day or night, 24×7.
             </p>
             <button
-              onClick={() => (window.location.href = "/book-service")}
+              onClick={() => (window.location.href = "/address")}
               className="bg-gradient-to-r from-[#EA580C] to-[#c94a0a] text-white font-semibold px-10 py-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-lg"
             >
               Schedule Pickup Now

@@ -9,6 +9,10 @@ import {
   Calendar,
   ShoppingBag,
   Trash2,
+  Droplets,
+  Sparkles,
+  Bath,
+  WashingMachine,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -17,12 +21,20 @@ interface ProductVariant {
   id: number;
 }
 
+interface ProductImage {
+  id: number;
+  url: string;
+  alt?: string | null;
+  position?: number | null;
+}
+
 interface Product {
   id: number;
   name: string;
   description?: string | null;
   category?: { id: number };
   variants?: ProductVariant[];
+  images?: ProductImage[];
 }
 
 const CATEGORY_ID = 10;
@@ -30,6 +42,9 @@ const SHIPPING_FIXED = 10.99;
 const GST_RATE = 0.0;
 const PRODUCTS_LIMIT = 1000;
 const SELECTED_VARIANTS_KEY = "selectedVariantIds";
+
+/* Rotate through these when image is missing */
+const PRODUCT_ICON_COMPONENTS = [Shirt, WashingMachine, Bath, Droplets, Sparkles];
 
 /* ---------------------- Get API Base ---------------------- */
 const getApiBaseUrl = (): string => {
@@ -94,6 +109,13 @@ export default function ServicesSelectionPage() {
     <Calendar key="pickup" className="w-5 h-5" />,
     <ShoppingBag key="checkout" className="w-5 h-5" />,
   ];
+
+  const getImageUrl = (path: string): string => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    const base = apiBaseUrl.replace(/\/api$/, "").replace(/\/$/, "");
+    return `${base}${path}`;
+  };
 
   /* ---------------------- Helpers for selectedVariantIds ---------------------- */
   const addSelectedVariantId = (variantId: number) => {
@@ -403,6 +425,11 @@ export default function ServicesSelectionPage() {
               const isSelected = !!selectedMap[product.id];
               const isFeatured = idx === 0;
 
+              const firstImage = product.images?.[0];
+              const imageUrl = firstImage?.url ? getImageUrl(firstImage.url) : "";
+              const IconComponent =
+                PRODUCT_ICON_COMPONENTS[idx % PRODUCT_ICON_COMPONENTS.length];
+
               return (
                 <motion.div
                   key={product.id}
@@ -417,8 +444,16 @@ export default function ServicesSelectionPage() {
                 >
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
-                        <Shirt className="w-4 h-4 text-amber-600" />
+                      <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0 overflow-hidden">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={firstImage?.alt || product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <IconComponent className="w-5 h-5 text-amber-600" />
+                        )}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">

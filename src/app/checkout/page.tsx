@@ -76,6 +76,7 @@ function CheckoutContent() {
   const [cart, setCart] = useState<any[]>([]);
   const [placing, setPlacing] = useState(false);
   const [selectedVariantIds, setSelectedVariantIds] = useState<number[]>([]);
+  const [cardComplete, setCardComplete] = useState(false); // ✅ track card completion
 
   const steps = ["Address", "Services", "Pickup Date/Time", "Checkout"];
   const currentStep = 3;
@@ -452,28 +453,30 @@ function CheckoutContent() {
                         invalid: { color: "#e5424d" },
                       },
                     }}
+                    onChange={(event) => setCardComplete(event.complete)} // ✅ track completion
                   />
                 </div>
 
                 <button
-                  disabled={placing || !stripe || !elements}
-                  onClick={handlePlaceOrder}
-                  className={`w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition ${
-                    placing
-                      ? "bg-gray-400 cursor-wait"
-                      : "bg-amber-500 hover:bg-amber-600"
-                  }`}
-                >
-                  {placing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Placing Order...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-5 h-5" /> Place Order
-                    </>
-                  )}
-                </button>
+                    disabled={placing || !stripe || !elements || !cardComplete}
+                    onClick={handlePlaceOrder}
+                    className={`w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition ${
+                      placing || !cardComplete
+                        ? "bg-amber-200 text-amber-600 cursor-not-allowed"
+                        : "bg-amber-500 hover:bg-amber-600"
+                    }`}
+                  >
+                    {placing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Placing Order...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5" /> Place Order
+                      </>
+                    )}
+                  </button>
+
               </div>
             </div>
           </div>
