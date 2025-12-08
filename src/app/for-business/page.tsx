@@ -169,7 +169,7 @@ export default function ForBusinessPage() {
                         value={form.phone}
                         onChange={handleChange}
                         className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-                        placeholder="+91 98765 43210"
+                        placeholder="+1 (604) 123-4567"
                       />
                     </div>
 

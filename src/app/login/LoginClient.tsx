@@ -241,13 +241,16 @@ export default function LoginClient() {
           window.google?.accounts?.id?.renderButton
         ) {
           try {
+            // Clear any previous render
             googleContainerRef.current.innerHTML = "";
+            const containerWidth = googleContainerRef.current.clientWidth;
+            const buttonWidth = Math.min(containerWidth || 300, 400);
             window.google.accounts.id.renderButton(
               googleContainerRef.current,
               {
                 theme: "outline",
                 size: "large",
-                width: "100%",
+                width: `${buttonWidth}`,
               }
             );
             setGoogleRendered(true);
@@ -270,6 +273,42 @@ export default function LoginClient() {
       mounted = false;
     };
   }, []);
+
+  // Handle resize for dynamic re-rendering on orientation change or window resize
+  useEffect(() => {
+    if (!googleRendered) return;
+
+    const handleResize = () => {
+      if (
+        !googleContainerRef.current ||
+        !window.google?.accounts?.id?.renderButton
+      ) {
+        return;
+      }
+
+      const container = googleContainerRef.current;
+      container.innerHTML = "";
+      const containerWidth = container.clientWidth;
+      const buttonWidth = Math.min(containerWidth || 300, 400);
+      try {
+        window.google.accounts.id.renderButton(container, {
+          theme: "outline",
+          size: "large",
+          width: `${buttonWidth}`,
+        });
+      } catch (err) {
+        console.warn("Google renderButton failed on resize:", err);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    // Initial call in case of immediate resize, but unlikely
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [googleRendered]);
 
   async function handleCredentialResponse(response: any) {
     const idToken = response?.credential;
@@ -425,7 +464,6 @@ export default function LoginClient() {
               />
               Remember me
             </label>
-            {/* 🔗 Updated link */}
             <Link
               href="/forgot-password"
               className="text-[#506600] hover:underline"
@@ -450,7 +488,12 @@ export default function LoginClient() {
         </div>
 
         <div className="mt-6">
-          <div ref={googleContainerRef} />
+          {/* ✅ Container gives full width on all devices */}
+          <div
+            ref={googleContainerRef}
+            className="w-full min-h-[50px]"
+            style={{ overflow: "visible" }}
+          />
           {!googleRendered && (
             <div className="mt-3">
               <button
@@ -460,7 +503,6 @@ export default function LoginClient() {
                 type="button"
                 aria-label="Continue with Google"
               >
-                {/* Google SVG same as before */}
                 <svg
                   role="img"
                   aria-hidden="false"
@@ -493,7 +535,6 @@ export default function LoginClient() {
           )}
         </div>
 
-        {/* ✅ Register link */}
         <div className="mt-6 text-center text-sm text-gray-600">
           Don’t have an account?{" "}
           <button

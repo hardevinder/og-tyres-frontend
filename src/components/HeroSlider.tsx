@@ -24,9 +24,11 @@ export default function LaundryHero() {
         loop
         playsInline
         poster="/laundry-hero-poster.jpg"
+        preload="metadata"
         className="absolute inset-0 w-full h-full object-cover"
       >
-        <source src="/10271-1.mov" type="video/mp4" />
+        {/* NEW VIDEO FILE */}
+        <source src="/UpdateLaundry24.mp4" type="video/mp4" />
       </video>
 
       {/* 🌓 Overlay */}
@@ -34,7 +36,6 @@ export default function LaundryHero() {
 
       {/* ✨ Content */}
       <div className="relative z-10 text-center px-4 sm:px-6 max-w-3xl mx-auto text-white w-full">
-
         {/* Main Heading */}
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-4 tracking-tight">
           <span className="block text-[#E5E7EB]">Doorstep Laundry</span>
@@ -52,7 +53,6 @@ export default function LaundryHero() {
 
         {/* 🌟 CTA Card */}
         <div className="relative bg-white/10 backdrop-blur-2xl rounded-2xl border border-white/20 p-5 sm:p-6 shadow-xl max-w-lg mx-auto animate-fade-up">
-
           {/* Button */}
           <button
             onClick={handleGetStarted}

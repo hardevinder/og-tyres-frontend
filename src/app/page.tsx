@@ -1,3 +1,5 @@
+"use client";
+
 import HeroSlider from "../components/HeroSlider";
 import AboutUs from "../components/AboutUs";
 import DiabetesCare from "../components/DiabetesCare";
@@ -6,11 +8,17 @@ import WhyChooseUs from "../components/WhyChooseUs";
 import LifestyleBanner from "@/components/LifestyleBanner";
 import Testimonials from "@/components/Testimonials";
 import CallToAction from "@/components/CallToAction";
-import AnimatedSection from "@/components/AnimatedSection"; // ✅ import wrapper
+import AnimatedSection from "@/components/AnimatedSection";
+
+// 👇 NEW IMPORT
+import FirstOrderOfferPopup from "@/components/FirstOrderOfferPopup";
 
 export default function Home() {
   return (
     <>
+      {/* 🎉 First Customer Offer Popup */}
+      <FirstOrderOfferPopup storageKey="healthcare_first_offer_popup_v2" />
+
       {/* Hero FULL WIDTH */}
       <div className="w-full">
         <HeroSlider />
