@@ -1,203 +1,190 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react";
-import BreadcrumbBanner from "@/components/BreadcrumbBanner";
-
-const LOCATIONS = [
-  "Vancouver",
-  "North Vancouver",
-  "West Vancouver",
-  "Richmond",
-  "New Westminster",
-  "Burnaby",
-  "Coquitlam",
-  "Maple Ridge",
-  "Delta",
-  "White Rock",
-  "Langley",
-  "Port Moody",
-  "Pitt Meadows",
-  "Surrey",
-];
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Mail, Phone, MapPin, Clock, CheckCircle2 } from "lucide-react";
 
 export default function ContactPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [topic, setTopic] = useState("General");
+  const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const canSend = useMemo(() => {
+    return name.trim() && email.trim() && message.trim();
+  }, [name, email, message]);
+
   return (
-    <>
-      {/* Banner */}
-      <BreadcrumbBanner
-        title="Connect With Us"
-        breadcrumbs={[
-          { label: "Home", href: "/" },
-          { label: "Contact" },
-        ]}
-        background="/contact-banner.jpg"
-      />
-
-      {/* Main Section */}
-      <section className="w-full bg-gradient-to-br from-[#FFFDF8] to-[#F8F9FA] py-24 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto">
-          {/* Contact Info and Map Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-20">
-            {/* Contact Info */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="space-y-8 lg:col-span-1"
-            >
-              <div>
-                <h2 className="text-4xl font-bold text-[#001f3f] mb-6">
-                  Let's Connect
-                </h2>
-                <p className="text-gray-600 leading-relaxed mb-8">
-                  Whether it's scheduling a pickup, asking about our services, or
-                  sharing feedback, our team is always here for you. Enjoy truly
-                  flexible, on-your-schedule laundry with 24×7 availability.
-                </p>
+    <div className="min-h-screen bg-[#050505] text-white">
+      {/* Hero */}
+      <section className="border-b border-white/10">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-3 py-1 text-xs text-[#f7c25a]">
+                <span className="h-2 w-2 rounded-full bg-[#f7c25a]" />
+                Support • Demo
               </div>
 
-              <div className="space-y-6">
-                {/* Location */}
-                <div className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-50">
-                  <div className="bg-[#EA580C]/10 p-3 rounded-xl">
-                    <MapPin size={24} className="text-[#EA580C]" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-[#001f3f] mb-1">
-                      Metro Vancouver Coverage
-                    </h3>
-                    <p className="text-gray-600 text-sm">
-                      Proudly serving the Greater Vancouver Area with reliable,
-                      doorstep service.
-                    </p>
-                  </div>
-                </div>
+              <h1 className="mt-4 text-4xl font-extrabold tracking-tight">
+                Contact{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f7c25a] to-[#d79b2b]">
+                  OG Tires
+                </span>
+              </h1>
 
-                {/* Email */}
-                <div className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-50">
-                  <div className="bg-[#EA580C]/10 p-3 rounded-xl">
-                    <Mail size={24} className="text-[#EA580C]" />
-                  </div>
-                  <a
-                    href="mailto:info@laundry24.ca"
-                    className="text-[#001f3f] hover:text-[#EA580C] transition"
-                  >
-                    info@laundry24.ca
-                  </a>
-                </div>
-
-                {/* Phone */}
-                <div className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-50">
-                  <div className="bg-[#EA580C]/10 p-3 rounded-xl">
-                    <Phone size={24} className="text-[#EA580C]" />
-                  </div>
-                  <a
-                    href="tel:+16722302211"
-                    className="text-[#001f3f] hover:text-[#EA580C] transition"
-                  >
-                    +1 (672) 230-2211
-                  </a>
-                </div>
-
-                {/* 24x7 Availability */}
-                <div className="p-4 bg-white rounded-2xl shadow-sm border border-gray-50">
-                  <h3 className="font-semibold text-[#001f3f] mb-2 flex items-center gap-2">
-                    <Clock size={20} className="text-[#EA580C]" />
-                    Available 24×7
-                  </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    No fixed business hours — we operate round the clock. Schedule
-                    pickups, drop-offs, and get support any time of the day or
-                    night, 7 days a week.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Map */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="lg:col-span-2 w-full h-[500px] rounded-3xl overflow-hidden shadow-xl"
-            >
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2602.845120995093!2d-123.1216476232473!3d49.28272997282507!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54867179b1f7a6b9%3A0xb0f11df8c9edc0a9!2sVancouver%2C%20BC!5e0!3m2!1sen!2sca!4v1699999999999"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </motion.div>
-          </div>
-
-          {/* Service Areas */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-20"
-          >
-            <h2 className="text-4xl font-bold text-[#001f3f] mb-8">
-              Our Service Footprint
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed">
-              We extend our premium laundry services throughout the vibrant
-              communities of Metro Vancouver, ensuring convenience and quality
-              wherever you are.
-            </p>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-              {LOCATIONS.map((city, idx) => (
-                <motion.div
-                  key={city}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: idx * 0.05 }}
-                  viewport={{ once: true }}
-                  className="group bg-white border border-orange-50 rounded-2xl py-6 px-4 shadow-sm hover:shadow-md hover:border-[#EA580C]/20 transition-all duration-300 flex items-center justify-center"
-                >
-                  <CheckCircle
-                    size={20}
-                    className="text-[#EA580C] group-hover:scale-110 transition-transform mr-2 opacity-0 group-hover:opacity-100"
-                  />
-                  <p className="text-[#001f3f] font-semibold text-lg">
-                    {city}
-                  </p>
-                </motion.div>
-              ))}
+              <p className="mt-3 max-w-2xl text-sm text-white/70">
+                Ask about tyre sizes, availability, or pricing. Share size like 205/55R16 for faster help.
+              </p>
             </div>
-          </motion.div>
 
-          {/* CTA Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <h3 className="text-3xl font-bold text-[#001f3f] mb-6">
-              Ready to Simplify Your Laundry Routine?
-            </h3>
-            <p className="text-gray-600 mb-8 max-w-xl mx-auto">
-              Schedule a pickup any time that suits you. Laundry on your timing —
-              day or night, 24×7.
-            </p>
-            <button
-              onClick={() => (window.location.href = "/address")}
-              className="bg-gradient-to-r from-[#EA580C] to-[#c94a0a] text-white font-semibold px-10 py-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-lg"
+            <Link
+              href="/products"
+              className="inline-flex items-center justify-center rounded-2xl bg-[#f7c25a] px-5 py-3 text-sm font-extrabold text-black hover:brightness-110 transition"
             >
-              Schedule Pickup Now
-            </button>
-          </motion.div>
+              Browse Tyres →
+            </Link>
+          </div>
         </div>
       </section>
-    </>
+
+      {/* Content */}
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <div className="grid gap-6 lg:grid-cols-12">
+
+          {/* Left Info */}
+          <div className="lg:col-span-5 space-y-4">
+            {[
+              { icon: Mail, title: "Email", value: "support@ogtires.com", note: "Reply within 24 hrs (demo)" },
+              { icon: Phone, title: "Phone", value: "+91 00000 00000", note: "Mon–Sat • 9 AM – 7 PM" },
+              { icon: MapPin, title: "Address", value: "Your City, India", note: "Google Maps integration later" },
+            ].map((item, i) => (
+              <div key={i} className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-[#f7c25a]/15 p-3 text-[#f7c25a]">
+                    <item.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-extrabold">{item.title}</div>
+                    <div className="mt-1 text-sm text-white/80">{item.value}</div>
+                    <div className="mt-2 text-xs text-white/50">{item.note}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="rounded-3xl border border-[#f7c25a]/30 bg-[#f7c25a]/10 p-6 text-[#f7c25a]">
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 mt-1" />
+                <div>
+                  <div className="text-sm font-extrabold">Quick Tip</div>
+                  <div className="mt-1 text-sm text-white/80">
+                    Mention your tyre size and vehicle type for accurate suggestions.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Form */}
+          <div className="lg:col-span-7">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+              {!sent ? (
+                <>
+                  <h2 className="text-xl font-extrabold">Send a message</h2>
+                  <p className="mt-1 text-sm text-white/70">
+                    Demo only — backend integration later.
+                  </p>
+
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Full Name *"
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-[#f7c25a]"
+                    />
+                    <input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email *"
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-[#f7c25a]"
+                    />
+                    <input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Phone"
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-[#f7c25a]"
+                    />
+                    <select
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm"
+                    >
+                      <option>General</option>
+                      <option>Tyre Size Help</option>
+                      <option>Bulk Purchase</option>
+                      <option>Dealership</option>
+                      <option>Report Issue</option>
+                    </select>
+                  </div>
+
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    rows={6}
+                    placeholder="Write your message..."
+                    className="mt-4 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-[#f7c25a]"
+                  />
+
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      disabled={!canSend}
+                      onClick={() => setSent(true)}
+                      className={`rounded-2xl px-6 py-3 text-sm font-extrabold transition ${
+                        canSend
+                          ? "bg-[#f7c25a] text-black hover:brightness-110"
+                          : "bg-white/10 text-white/40 cursor-not-allowed"
+                      }`}
+                    >
+                      Send Message
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="py-12 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f7c25a]/20 text-[#f7c25a]">
+                    <CheckCircle2 className="h-7 w-7" />
+                  </div>
+                  <h3 className="mt-4 text-2xl font-extrabold">Message sent (demo)!</h3>
+                  <p className="mt-2 text-sm text-white/70">
+                    Thanks {name || "friend"}, we’ll connect real email sending soon.
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setSent(false);
+                      setName("");
+                      setEmail("");
+                      setPhone("");
+                      setTopic("General");
+                      setMessage("");
+                    }}
+                    className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold hover:bg-white/10"
+                  >
+                    Send Another
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 text-xs text-white/40">
+              Premium demo UI — backend integration coming soon.
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

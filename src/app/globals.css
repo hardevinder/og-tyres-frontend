@@ -1,31 +1,34 @@
 /* -------------------------------------------- */
-/* 🌟 GLOBAL STYLES — Laundry24 (Next.js + Tailwind) */
+/* 🌟 GLOBAL STYLES — TyreSite (Next.js + Tailwind) */
 /* -------------------------------------------- */
 
-/* ✅ Tailwind core first */
 @import "tailwindcss";
 
 /* -------------------------------------------- */
-/* 🎨 Root Variables (Brand Colors & Fonts) */
+/* 🎨 Root Variables (Tyre Light Theme) */
 /* -------------------------------------------- */
-:root {
-  --background: #fafafa;
-  --foreground: #1f2937; /* Charcoal Gray */
 
-  /* Laundry24 Brand Colors */
-  --primary: #f59e0b;   /* Bright Orange */
-  --secondary: #fbbf24; /* Warm Golden Accent */
-  --dark: #1f2937;      /* Charcoal for Text/Nav */
-  --muted: #6b7280;     /* Neutral Gray */
-  --light: #ffffff;     /* Clean White */
+:root {
+  /* Base */
+  --background: #ffffff;
+  --foreground: #0f172a; /* slate-900 */
+  --surface: #f8fafc;    /* slate-50 */
+  --border: #e5e7eb;     /* gray-200 */
+  --muted: #64748b;      /* slate-500 */
+
+  /* Brand (NO ORANGE) */
+  --primary: #2563eb;    /* blue-600 */
+  --secondary: #10b981;  /* emerald-500 */
+  --dark: #0f172a;       /* slate-900 */
+  --light: #ffffff;
 
   /* Navbar Heights */
   --nav-height: 64px;
-  --nav-height-scrolled: 48px;
+  --nav-height-scrolled: 56px;
 
   /* Fonts */
-  --font-sans: var(--font-geist-sans, Arial, Helvetica, sans-serif);
-  --font-mono: var(--font-geist-mono, monospace);
+  --font-sans: var(--font-geist-sans, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Helvetica, sans-serif);
+  --font-mono: var(--font-geist-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
 
   /* Always light mode */
   color-scheme: light;
@@ -37,6 +40,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-dark: var(--dark);
@@ -79,48 +83,48 @@ main h5,
 main h6 {
   color: var(--dark);
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 /* -------------------------------------------- */
-/* 🔗 Links */
+/* 🔗 Links (Brand Blue) */
 /* -------------------------------------------- */
 a {
   color: var(--primary);
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, opacity 0.2s ease;
   text-decoration: none;
 }
 a:hover {
-  color: var(--secondary);
+  color: #1d4ed8; /* blue-700 */
 }
 
 /* -------------------------------------------- */
-/* 🔘 Buttons */
+/* 🔘 Buttons (Blue/Emerald) */
 /* -------------------------------------------- */
 .btn-primary {
-  background-color: var(--primary);
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
   color: #fff;
-  padding: 0.6rem 1.25rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: background 0.2s ease, transform 0.2s ease;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  transition: transform 0.2s ease, opacity 0.2s ease;
   display: inline-block;
 }
 .btn-primary:hover {
-  background-color: var(--secondary);
+  opacity: 0.92;
   transform: translateY(-1px);
 }
 
 .btn-dark {
   background-color: var(--dark);
   color: #fff;
-  padding: 0.6rem 1.25rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: background 0.2s ease;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease;
 }
 .btn-dark:hover {
-  background-color: var(--muted);
+  opacity: 0.9;
 }
 
 /* -------------------------------------------- */
@@ -141,10 +145,11 @@ a:hover {
 
 .site-header.scrolled {
   height: var(--nav-height-scrolled);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  background: rgba(31, 41, 55, 0.85);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 body.has-fixed-navbar main {

@@ -2,57 +2,41 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./globals.css";
 
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import FloatingButtons from "../components/FloatingButtons";
-import GoogleSdkLoader from "../components/GoogleSdkLoader";
 import type { Metadata } from "next";
 
+// ✅ import your real components (adjust path if needed)
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
 // ----------------------------------------------------
-// 🌐 Site Metadata
+// 🌐 Site Metadata (Tyre)
 // ----------------------------------------------------
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const metadataBase = new URL(siteUrl);
 
 export const metadata: Metadata = {
   metadataBase,
-  title: "Laundry24 – Pickup & Delivery Laundry Service",
+  title: "OG Tires & Rims – Premium Tyres Catalogue",
   description:
-    "Laundry24 offers fast, reliable, and affordable pickup & delivery laundry services available 24×7.",
-  keywords: [
-    "Laundry",
-    "Dry Cleaning",
-    "Laundry24",
-    "Pickup Laundry Service",
-    "Laundry Delivery",
-    "Online Laundry",
-    "Doorstep Laundry",
-  ],
-  authors: [{ name: "Laundry24" }],
+    "Explore premium tyres by category, brand and size. Static demo frontend (backend will be connected later).",
+  keywords: ["Tyres", "Tire shop", "Tyre catalogue", "Car tyres", "SUV tyres", "Truck tyres", "Tyre size"],
+  authors: [{ name: "OG Tires & Rims" }],
   openGraph: {
-    title: "Laundry24 – 24×7 Pickup Laundry Service",
-    description:
-      "Experience the smartest way to do laundry. Laundry24 offers doorstep pickup and delivery — clean clothes, no hassle.",
+    title: "OG Tires & Rims – Premium Tyres Catalogue",
+    description: "Browse tyre categories, compare sizes and build your cart. Demo UI with static data.",
     url: "/",
-    siteName: "Laundry24",
+    siteName: "OG Tires & Rims",
     images: [
-      {
-        url: "/laundry24-og.png",
-        width: 1200,
-        height: 630,
-        alt: "Laundry24 – 24×7 Laundry Pickup Service",
-      },
+      { url: "/og-tyres.png", width: 1200, height: 630, alt: "OG Tires & Rims – Premium Tyres Catalogue" },
     ],
     locale: "en_IN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laundry24 – Smart Laundry at Your Doorstep",
-    description:
-      "Affordable, professional laundry & dry-cleaning service with 24×7 pickup and delivery.",
-    images: ["/laundry24-og.png"],
-    creator: "@laundry24",
+    title: "OG Tires & Rims – Premium Tyres",
+    description: "Browse tyres by category and size. Demo UI (static data).",
+    images: ["/og-tyres.png"],
   },
   icons: {
     icon: [
@@ -66,24 +50,16 @@ export const metadata: Metadata = {
 };
 
 // ----------------------------------------------------
-// 🧺 Root Layout
+// 🧺 Root Layout (Tyre)
 // ----------------------------------------------------
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-900 flex flex-col min-h-screen antialiased">
-        {/* ✅ Google SDK Loader (client side) */}
-        <GoogleSdkLoader />
-
-        {/* 🧭 Global Layout */}
+      {/* ✅ make body theme-ready (your pages can still override) */}
+      <body className="bg-[#050505] text-white flex flex-col min-h-screen antialiased">
         <Navbar />
         <main className="flex-grow">{children}</main>
         <Footer />
-        <FloatingButtons />
       </body>
     </html>
   );
