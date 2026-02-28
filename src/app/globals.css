@@ -81,7 +81,7 @@ main h3,
 main h4,
 main h5,
 main h6 {
-  color: var(--dark);
+  color: inherit;       /* ✅ takes color from parent (your page theme) */
   font-weight: 700;
   line-height: 1.25;
 }

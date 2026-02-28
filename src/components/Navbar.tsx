@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, Search, ShoppingCart, PhoneCall } from "lucide-react";
 
@@ -49,38 +50,18 @@ export default function Navbar() {
   return (
     <header className={headerClass}>
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
-        
-        {/* Brand */}
+        {/* ✅ Brand LOGO ONLY */}
         <Link href="/" className="flex items-center gap-3">
-          <img
-            src="/brand/og-logo.png"
-            alt="OG Tires & Rims"
-            className="h-10 w-auto object-contain"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-          <div className="leading-tight">
-            <div className="text-sm font-extrabold tracking-wide text-white">
-              OG TIRES & RIMS
-            </div>
-            <div className="text-xs text-white/60">
-              Premium Tyres Catalogue
-            </div>
-          </div>
-        </Link>
-
-        {/* Desktop Search */}
-        <div className="hidden md:flex flex-1 justify-center">
-          <div className="w-full max-w-md flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10 transition">
-            <Search className="h-4 w-4 text-[#f7c25a]" />
-            <input
-              className="w-full bg-transparent text-sm outline-none placeholder:text-white/40 text-white"
-              placeholder='Search size / brand e.g. "205/55R16"'
+          <div className="relative h-10 w-[150px] sm:w-[170px]">
+            <Image
+              src="/brand/og-logo.png"
+              alt="OG Tires & Rims"
+              fill
+              priority
+              className="object-contain"
             />
           </div>
-        </div>
-
+        </Link>
         {/* Desktop Links */}
         <nav className="hidden lg:flex items-center gap-2">
           {navLinks.map((l) => {
@@ -139,19 +120,14 @@ export default function Navbar() {
 
           <div className="absolute right-0 top-0 h-full w-[86%] max-w-sm bg-black shadow-2xl border-l border-white/10">
             <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <img
+              {/* ✅ Logo only in drawer header */}
+              <div className="relative h-10 w-[160px]">
+                <Image
                   src="/brand/og-logo.png"
                   alt="OG Tires & Rims"
-                  className="h-10 w-auto object-contain"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display =
-                      "none";
-                  }}
+                  fill
+                  className="object-contain"
                 />
-                <div className="text-sm font-extrabold text-white">
-                  OG TIRES & RIMS
-                </div>
               </div>
 
               <button
@@ -210,9 +186,7 @@ export default function Navbar() {
 
               <div className="mt-5 text-xs text-white/50">
                 Tip: Try tyre size{" "}
-                <span className="text-white/80 font-semibold">
-                  205/55R16
-                </span>
+                <span className="text-white/80 font-semibold">205/55R16</span>
               </div>
             </div>
           </div>

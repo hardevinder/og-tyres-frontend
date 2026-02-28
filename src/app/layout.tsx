@@ -4,6 +4,9 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 
+// ✅ Cart Provider (Client Component)
+import { CartProvider } from "../context/CartContext";
+
 // ✅ import your real components (adjust path if needed)
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -26,9 +29,7 @@ export const metadata: Metadata = {
     description: "Browse tyre categories, compare sizes and build your cart. Demo UI with static data.",
     url: "/",
     siteName: "OG Tires & Rims",
-    images: [
-      { url: "/og-tyres.png", width: 1200, height: 630, alt: "OG Tires & Rims – Premium Tyres Catalogue" },
-    ],
+    images: [{ url: "/og-tyres.png", width: 1200, height: 630, alt: "OG Tires & Rims – Premium Tyres Catalogue" }],
     locale: "en_IN",
     type: "website",
   },
@@ -57,9 +58,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       {/* ✅ make body theme-ready (your pages can still override) */}
       <body className="bg-[#050505] text-white flex flex-col min-h-screen antialiased">
-        <Navbar />
-        <main className="flex-grow">{children}</main>
-        <Footer />
+        {/* ✅ Wrap everything so useCart works everywhere */}
+        <CartProvider>
+          <Navbar />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );
