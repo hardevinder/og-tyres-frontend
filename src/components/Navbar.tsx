@@ -49,7 +49,8 @@ export default function Navbar() {
 
   return (
     <header className={headerClass}>
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
+      {/* ✅ Increased height: py-3 -> py-4 */}
+      <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between gap-3">
         {/* ✅ Brand LOGO ONLY */}
         <Link href="/" className="flex items-center gap-3">
           <div className="relative h-10 w-[150px] sm:w-[170px]">
@@ -62,6 +63,7 @@ export default function Navbar() {
             />
           </div>
         </Link>
+
         {/* Desktop Links */}
         <nav className="hidden lg:flex items-center gap-2">
           {navLinks.map((l) => {
@@ -70,11 +72,14 @@ export default function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                className={[
+                  // ✅ Force remove default link underline + visited color
+                  "no-underline hover:no-underline visited:!text-white",
+                  "rounded-xl px-3 py-2 text-sm font-semibold transition",
                   active
-                    ? "bg-[#f7c25a]/15 text-[#f7c25a] border border-[#f7c25a]/25"
-                    : "text-white/75 hover:text-white hover:bg-white/5 border border-transparent"
-                }`}
+                    ? "bg-white/10 !text-white border border-white/20"
+                    : "!text-white/85 hover:!text-white hover:bg-white/5 border border-transparent",
+                ].join(" ")}
               >
                 {l.label}
               </Link>
@@ -86,7 +91,7 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           <Link
             href="/cart"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10 transition"
+            className="no-underline hover:no-underline visited:!text-white inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold !text-white hover:bg-white/10 transition"
           >
             <ShoppingCart className="h-4 w-4 text-[#f7c25a]" />
             Cart
@@ -154,11 +159,13 @@ export default function Navbar() {
                     key={l.href}
                     href={l.href}
                     onClick={() => setOpen(false)}
-                    className={`block rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    className={[
+                      "no-underline hover:no-underline visited:!text-white",
+                      "block rounded-2xl border px-4 py-3 text-sm font-semibold transition",
                       isActive(l.href)
-                        ? "border-[#f7c25a]/25 bg-[#f7c25a]/10 text-[#f7c25a]"
-                        : "border-white/10 bg-white/5 text-white/85 hover:bg-white/10"
-                    }`}
+                        ? "border-white/20 bg-white/10 !text-white"
+                        : "border-white/10 bg-white/5 !text-white/90 hover:bg-white/10 hover:!text-white",
+                    ].join(" ")}
                   >
                     {l.label}
                   </Link>
@@ -177,7 +184,7 @@ export default function Navbar() {
                 <Link
                   href="/contact"
                   onClick={() => setOpen(false)}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-white/10 transition inline-flex items-center justify-center gap-2"
+                  className="no-underline hover:no-underline visited:!text-white rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold !text-white hover:bg-white/10 transition inline-flex items-center justify-center gap-2"
                 >
                   <PhoneCall className="h-4 w-4 text-[#f7c25a]" />
                   Contact Support
