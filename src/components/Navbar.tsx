@@ -11,7 +11,8 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-const PHONE_NUMBER = "+91 60471 23870";
+// ✅ Removed +91 from visible number
+const PHONE_NUMBER = "60471 23870";
 const PHONE_HREF = "tel:+916047123870";
 
 export default function Navbar() {
@@ -36,10 +37,8 @@ export default function Navbar() {
       if (currentY <= 20) {
         setShowHeader(true);
       } else if (currentY > lastScrollY.current) {
-        // scrolling down -> hide
         setShowHeader(false);
       } else {
-        // scrolling up -> show
         setShowHeader(true);
       }
 
@@ -244,7 +243,6 @@ export default function Navbar() {
         )}
       </header>
 
-      {/* Spacer */}
       <div className={scrolled ? "h-[76px]" : "h-[88px]"} />
     </>
   );

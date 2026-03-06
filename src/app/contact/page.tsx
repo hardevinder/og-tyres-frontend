@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
+const PHONE_NUMBER = "60471 23870";
+const PHONE_HREF = "tel:+916047123870";
+
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-[#050505] text-white">
@@ -63,9 +66,12 @@ export default function ContactPage() {
                   Phone
                 </div>
 
-                <div className="mt-2 text-xl font-extrabold">
-                  +91 60471 23870
-                </div>
+                <a
+                  href={PHONE_HREF}
+                  className="mt-2 block text-xl font-extrabold hover:text-[#f7c25a] transition"
+                >
+                  {PHONE_NUMBER}
+                </a>
 
                 <p className="mt-2 text-sm text-white/70">
                   Call us for product availability, tyre size guidance,
