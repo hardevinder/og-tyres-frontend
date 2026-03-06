@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const topPicks = [
   {
@@ -97,6 +98,8 @@ function SectionHeading({
 }
 
 export default function HomePage() {
+  const router = useRouter();
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#050505] text-white">
       {/* GLOBAL BACKGROUND */}
@@ -107,13 +110,13 @@ export default function HomePage() {
       </div>
 
       {/* HERO */}
-      <section className="relative border-b border-[#f7c25a]/10">
-        <div className="absolute inset-0 bg-[radial-gradient(800px_400px_at_12%_18%,rgba(247,194,90,0.16),transparent_60%),radial-gradient(700px_360px_at_82%_12%,rgba(247,194,90,0.10),transparent_60%)]" />
+      <section className="relative isolate border-b border-[#f7c25a]/10">
+        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(800px_400px_at_12%_18%,rgba(247,194,90,0.16),transparent_60%),radial-gradient(700px_360px_at_82%_12%,rgba(247,194,90,0.10),transparent_60%)]" />
 
-        <div className="mx-auto max-w-7xl px-4 pb-16 pt-14 md:px-6 md:pb-24 md:pt-20">
+        <div className="relative z-20 mx-auto max-w-7xl px-4 pb-16 pt-14 md:px-6 md:pb-24 md:pt-20">
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             {/* LEFT */}
-            <div className="lg:col-span-7">
+            <div className="relative z-30 lg:col-span-7">
               <GoldPill>OG Tyres Premium Collection</GoldPill>
 
               <h1 className="mt-5 max-w-4xl text-4xl font-extrabold leading-tight tracking-tight text-white md:text-6xl md:leading-[1.05]">
@@ -131,17 +134,18 @@ export default function HomePage() {
                 comfort, grip, durability, and style for every journey.
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="/products"
-                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#f7c25a] to-[#d79b2b] px-6 py-3.5 text-sm font-extrabold text-black shadow-[0_12px_30px_rgba(247,194,90,0.22)] transition hover:scale-[1.02] hover:brightness-110"
-                >
-                  Browse Collection
-                </Link>
+              <div className="relative z-40 mt-8 flex flex-wrap gap-3">
+           <button
+              type="button"
+              onClick={() => router.push("/products")}
+              className="relative z-50 inline-flex cursor-pointer items-center justify-center rounded-2xl bg-gradient-to-r from-[#d79b2b] via-[#f7c25a] to-[#c98a1e] px-6 py-3.5 text-sm font-extrabold text-white shadow-[0_14px_34px_rgba(247,194,90,0.35)] ring-1 ring-[#f7c25a]/40 transition hover:scale-[1.02] hover:brightness-110"
+            >
+              Browse Collection
+            </button>
 
                 <Link
                   href="/contact"
-                  className="inline-flex items-center justify-center rounded-2xl border border-[#f7c25a]/20 bg-white/[0.04] px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-[#f7c25a]/40 hover:bg-white/[0.07]"
+                  className="relative z-50 inline-flex items-center justify-center rounded-2xl border border-[#f7c25a]/20 bg-white/[0.04] px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-[#f7c25a]/40 hover:bg-white/[0.07]"
                 >
                   Get Expert Guidance
                 </Link>
@@ -188,9 +192,9 @@ export default function HomePage() {
             </div>
 
             {/* RIGHT SHOWCASE */}
-            <div className="lg:col-span-5">
+            <div className="relative z-20 lg:col-span-5">
               <div className="relative overflow-hidden rounded-[30px] border border-[#f7c25a]/14 bg-gradient-to-b from-[#141414] to-[#0a0a0a] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(247,194,90,0.14),transparent_45%)]" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(247,194,90,0.14),transparent_45%)]" />
 
                 <div className="relative flex items-start justify-between gap-4">
                   <div>
@@ -279,7 +283,7 @@ export default function HomePage() {
               href={c.href}
               className="group relative overflow-hidden rounded-[28px] border border-[#f7c25a]/12 bg-gradient-to-b from-white/[0.06] to-white/[0.03] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-1 hover:border-[#f7c25a]/28 hover:shadow-[0_20px_40px_rgba(0,0,0,0.32)]"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(247,194,90,0.12),transparent_35%)] opacity-0 transition duration-300 group-hover:opacity-100" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(247,194,90,0.12),transparent_35%)] opacity-0 transition duration-300 group-hover:opacity-100" />
 
               <div className="relative">
                 <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#f7c25a]/80">
@@ -411,7 +415,7 @@ export default function HomePage() {
       <section className="border-t border-[#f7c25a]/10 bg-[linear-gradient(180deg,rgba(247,194,90,0.04),rgba(0,0,0,0))]">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
           <div className="relative overflow-hidden rounded-[34px] border border-[#f7c25a]/14 bg-gradient-to-r from-[#121212] via-[#0d0d0d] to-[#101010] p-8 shadow-[0_22px_60px_rgba(0,0,0,0.38)] md:p-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_right,rgba(247,194,90,0.16),transparent_32%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_right,rgba(247,194,90,0.16),transparent_32%)]" />
 
             <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="max-w-2xl">
