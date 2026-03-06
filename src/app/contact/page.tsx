@@ -1,189 +1,154 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Mail, Phone, MapPin, Clock, CheckCircle2 } from "lucide-react";
+import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
 export default function ContactPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [topic, setTopic] = useState("General");
-  const [message, setMessage] = useState("");
-  const [sent, setSent] = useState(false);
-
-  const canSend = useMemo(() => {
-    return name.trim() && email.trim() && message.trim();
-  }, [name, email, message]);
-
   return (
     <div className="min-h-screen bg-[#050505] text-white">
-      {/* Hero */}
-      <section className="border-b border-white/10">
-        <div className="mx-auto max-w-6xl px-4 py-12">
+
+      {/* HERO */}
+      <section className="border-b border-[#f7c25a]/10">
+        <div className="mx-auto max-w-6xl px-4 py-14">
+
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-3 py-1 text-xs text-[#f7c25a]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-4 py-1 text-xs font-semibold text-[#f7c25a]">
                 <span className="h-2 w-2 rounded-full bg-[#f7c25a]" />
-                Support • Demo
+                Contact • OG Tyres & Rims
               </div>
 
-              <h1 className="mt-4 text-4xl font-extrabold tracking-tight">
-                Contact{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f7c25a] to-[#d79b2b]">
-                  OG Tires
+              <h1 className="mt-5 text-4xl font-extrabold tracking-tight md:text-5xl">
+                Get in touch with{" "}
+                <span className="bg-gradient-to-r from-[#f7c25a] to-[#d79b2b] bg-clip-text text-transparent">
+                  OG Tyres & Rims
                 </span>
               </h1>
 
-              <p className="mt-3 max-w-2xl text-sm text-white/70">
-                Ask about tyre sizes, availability, or pricing. Share size like 205/55R16 for faster help.
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/70">
+                Looking for the right tyre for your vehicle? Contact our team for
+                guidance on tyre sizes, fitment options, and product availability.
+                We are happy to help you choose the best option for your driving
+                needs.
               </p>
             </div>
 
             <Link
               href="/products"
-              className="inline-flex items-center justify-center rounded-2xl bg-[#f7c25a] px-5 py-3 text-sm font-extrabold text-black hover:brightness-110 transition"
+              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#f7c25a] to-[#d79b2b] px-6 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
             >
-              Browse Tyres →
+              Browse Products →
             </Link>
+
           </div>
         </div>
       </section>
 
-      {/* Content */}
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid gap-6 lg:grid-cols-12">
+      {/* CONTACT INFO */}
+      <section className="mx-auto max-w-6xl px-4 py-14">
 
-          {/* Left Info */}
-          <div className="lg:col-span-5 space-y-4">
-            {[
-              { icon: Mail, title: "Email", value: "support@ogtires.com", note: "Reply within 24 hrs (demo)" },
-              { icon: Phone, title: "Phone", value: "+91 00000 00000", note: "Mon–Sat • 9 AM – 7 PM" },
-              { icon: MapPin, title: "Address", value: "Your City, India", note: "Google Maps integration later" },
-            ].map((item, i) => (
-              <div key={i} className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-[#f7c25a]/15 p-3 text-[#f7c25a]">
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-extrabold">{item.title}</div>
-                    <div className="mt-1 text-sm text-white/80">{item.value}</div>
-                    <div className="mt-2 text-xs text-white/50">{item.note}</div>
-                  </div>
-                </div>
+        <div className="grid gap-6 md:grid-cols-2">
+
+          {/* PHONE */}
+          <div className="rounded-3xl border border-[#f7c25a]/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-8">
+
+            <div className="flex items-start gap-4">
+              <div className="rounded-2xl bg-[#f7c25a]/15 p-4 text-[#f7c25a]">
+                <Phone className="h-6 w-6" />
               </div>
-            ))}
 
-            <div className="rounded-3xl border border-[#f7c25a]/30 bg-[#f7c25a]/10 p-6 text-[#f7c25a]">
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 mt-1" />
-                <div>
-                  <div className="text-sm font-extrabold">Quick Tip</div>
-                  <div className="mt-1 text-sm text-white/80">
-                    Mention your tyre size and vehicle type for accurate suggestions.
-                  </div>
+              <div>
+                <div className="text-sm font-semibold uppercase tracking-wide text-[#f7c25a]">
+                  Phone
+                </div>
+
+                <div className="mt-2 text-xl font-extrabold">
+                  +91 60471 23870
+                </div>
+
+                <p className="mt-2 text-sm text-white/70">
+                  Call us for product availability, tyre size guidance,
+                  and purchase assistance.
+                </p>
+
+                <div className="mt-4 text-xs text-white/50">
+                  Available during working hours.
                 </div>
               </div>
             </div>
+
           </div>
 
-          {/* Right Form */}
-          <div className="lg:col-span-7">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-              {!sent ? (
-                <>
-                  <h2 className="text-xl font-extrabold">Send a message</h2>
-                  <p className="mt-1 text-sm text-white/70">
-                    Demo only — backend integration later.
-                  </p>
+          {/* EMAIL */}
+          <div className="rounded-3xl border border-[#f7c25a]/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-8">
 
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Full Name *"
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-[#f7c25a]"
-                    />
-                    <input
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Email *"
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-[#f7c25a]"
-                    />
-                    <input
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Phone"
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-[#f7c25a]"
-                    />
-                    <select
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm"
-                    >
-                      <option>General</option>
-                      <option>Tyre Size Help</option>
-                      <option>Bulk Purchase</option>
-                      <option>Dealership</option>
-                      <option>Report Issue</option>
-                    </select>
-                  </div>
+            <div className="flex items-start gap-4">
+              <div className="rounded-2xl bg-[#f7c25a]/15 p-4 text-[#f7c25a]">
+                <Mail className="h-6 w-6" />
+              </div>
 
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={6}
-                    placeholder="Write your message..."
-                    className="mt-4 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none focus:border-[#f7c25a]"
-                  />
-
-                  <div className="mt-6 flex justify-end">
-                    <button
-                      disabled={!canSend}
-                      onClick={() => setSent(true)}
-                      className={`rounded-2xl px-6 py-3 text-sm font-extrabold transition ${
-                        canSend
-                          ? "bg-[#f7c25a] text-black hover:brightness-110"
-                          : "bg-white/10 text-white/40 cursor-not-allowed"
-                      }`}
-                    >
-                      Send Message
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="py-12 text-center">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f7c25a]/20 text-[#f7c25a]">
-                    <CheckCircle2 className="h-7 w-7" />
-                  </div>
-                  <h3 className="mt-4 text-2xl font-extrabold">Message sent (demo)!</h3>
-                  <p className="mt-2 text-sm text-white/70">
-                    Thanks {name || "friend"}, we’ll connect real email sending soon.
-                  </p>
-
-                  <button
-                    onClick={() => {
-                      setSent(false);
-                      setName("");
-                      setEmail("");
-                      setPhone("");
-                      setTopic("General");
-                      setMessage("");
-                    }}
-                    className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold hover:bg-white/10"
-                  >
-                    Send Another
-                  </button>
+              <div>
+                <div className="text-sm font-semibold uppercase tracking-wide text-[#f7c25a]">
+                  Email
                 </div>
-              )}
+
+                <div className="mt-2 text-xl font-extrabold">
+                  ogtiresandrims@gmail.com
+                </div>
+
+                <p className="mt-2 text-sm text-white/70">
+                  Send us your tyre requirement and vehicle details. Our team
+                  will guide you with the best available options.
+                </p>
+
+                <div className="mt-4 text-xs text-white/50">
+                  Email responses are usually provided within working hours.
+                </div>
+              </div>
             </div>
 
-            <div className="mt-4 text-xs text-white/40">
-              Premium demo UI — backend integration coming soon.
-            </div>
           </div>
+
         </div>
+
+        {/* HOURS */}
+        <div className="mt-6 rounded-3xl border border-[#f7c25a]/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-8">
+
+          <div className="flex items-start gap-4">
+
+            <div className="rounded-2xl bg-[#f7c25a]/15 p-4 text-[#f7c25a]">
+              <Clock className="h-6 w-6" />
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold uppercase tracking-wide text-[#f7c25a]">
+                Working Hours
+              </div>
+
+              <div className="mt-2 text-lg font-extrabold">
+                9:00 AM – 7:00 PM
+              </div>
+
+              <p className="mt-2 text-sm text-white/70">
+                Our team is available during business hours to assist customers
+                with tyre selection, fitment information, and purchase inquiries.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* EXTRA TEXT */}
+        <div className="mt-10 max-w-3xl text-sm leading-7 text-white/65">
+          OG Tyres & Rims is committed to providing customers with reliable tyre
+          options suited for everyday driving as well as performance needs.
+          Whether you are searching for a specific tyre size or exploring
+          different categories, our team is ready to guide you toward the best
+          choice for your vehicle.
+        </div>
+
       </section>
     </div>
   );

@@ -1,32 +1,51 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // ✅ Completely disable Turbopack — force Webpack instead
-  // (The new API requires a nested object)
-  experimental: {
-    turbo: {
-      rules: {}, // just an empty object disables turbo rules
-    },
+  // ✅ Next 15 Turbopack config
+  turbopack: {
+    rules: {},
   },
 
-  // ✅ Ignore TypeScript build errors
+  // ✅ Ignore TypeScript errors during production build
   typescript: {
     ignoreBuildErrors: true,
   },
 
-  // ✅ Ignore ESLint warnings during build
+  // ✅ Ignore ESLint during build
   eslint: {
     ignoreDuringBuilds: true,
   },
 
-  // ✅ Image domain whitelist for Next <Image>
+  // ✅ Allow external image sources
   images: {
-    domains: [
-      "localhost",
-      "laundry24.ca",
-      "www.laundry24.ca",
-      "laundry24.in",
-      "www.laundry24.in",
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "5055",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "api-ogtire.edubridgeerp.in",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "laundry24.ca",
+      },
+      {
+        protocol: "https",
+        hostname: "www.laundry24.ca",
+      },
+      {
+        protocol: "https",
+        hostname: "laundry24.in",
+      },
+      {
+        protocol: "https",
+        hostname: "www.laundry24.in",
+      },
     ],
   },
 };

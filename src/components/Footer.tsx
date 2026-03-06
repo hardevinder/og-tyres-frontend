@@ -1,128 +1,160 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Instagram, MessageCircle } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-white border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-14 grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
-        
-        {/* Left: Brand + About */}
-        <div className="flex flex-col items-start text-left">
+    <footer className="relative overflow-hidden border-t border-[#f7c25a]/15 bg-[#050505] text-white">
+
+      {/* GOLD BACKGROUND EFFECT */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_left_top,rgba(247,194,90,0.12),transparent_30%),radial-gradient(circle_at_right_bottom,rgba(247,194,90,0.08),transparent_30%)]" />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-14 grid grid-cols-1 md:grid-cols-3 gap-12">
+
+        {/* BRAND */}
+        <div>
           <Link href="/" className="flex items-center gap-3">
-            <div className="rounded-xl bg-[#f7c25a] px-3 py-2 text-black font-extrabold tracking-wide">
+            <div className="rounded-xl bg-gradient-to-br from-[#f7c25a] to-[#d79b2b] px-3 py-2 text-black font-extrabold tracking-widest shadow-lg">
               OG
             </div>
-            <div className="leading-tight">
-              <div className="text-sm font-bold tracking-wide">
+
+            <div>
+              <div className="text-sm font-extrabold tracking-wide text-white">
                 OG TIRES & RIMS
               </div>
-              <div className="text-xs text-white/50">
+              <div className="text-xs text-[#f7c25a]/80 uppercase tracking-widest">
                 Premium Tyres Catalogue
               </div>
             </div>
           </Link>
 
-          <p className="text-sm leading-relaxed mt-4 max-w-sm text-white/60">
-            Explore premium tyres by category, brand and size. Browse by
-            performance, durability and road conditions. Built for speed,
-            safety and style.
+          <p className="text-sm mt-5 leading-7 text-white/60 max-w-sm">
+            Discover premium tyres and rims designed for durability,
+            performance, and comfort. Explore our catalogue and find the
+            perfect tyre for every road.
           </p>
 
-          {/* Social Icons */}
-          <div className="flex items-center space-x-4 mt-5">
-            <span className="text-white/60 hover:text-[#f7c25a] transition cursor-pointer">
-              <Facebook size={20} />
-            </span>
-            <span className="text-white/60 hover:text-[#f7c25a] transition cursor-pointer">
-              <Instagram size={20} />
-            </span>
-            <span className="text-white/60 hover:text-[#f7c25a] transition cursor-pointer">
-              <MessageCircle size={20} />
-            </span>
+          <div className="mt-6 rounded-xl border border-[#f7c25a]/20 bg-white/[0.03] px-4 py-3">
+            <div className="text-xs uppercase tracking-widest text-[#f7c25a] font-semibold">
+              Premium Experience
+            </div>
+            <div className="text-sm text-white/60 mt-1">
+              A luxury tyre catalogue experience.
+            </div>
           </div>
         </div>
 
-        {/* Middle: Quick Links */}
-        <div className="text-left">
-          <h4 className="text-lg font-semibold mb-4 text-white">
-            Quick Links
-          </h4>
+        {/* QUICK LINKS */}
+        <div>
+          <h4 className="text-lg font-bold text-white">Quick Links</h4>
 
-          <div className="grid grid-cols-2 gap-y-2 text-sm">
-            <div className="space-y-2">
-              <Link className="text-white/60 hover:text-[#f7c25a] transition" href="/products">
+          <div className="w-14 h-[2px] bg-[#f7c25a] mt-3 mb-5" />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-sm">
+
+            <div className="space-y-3">
+
+              <Link
+                href="/products"
+                className="block text-[#f7c25a] hover:text-[#ffd978] transition"
+              >
                 Products
               </Link>
-              <Link className="text-white/60 hover:text-[#f7c25a] transition" href="/catalogues">
+
+              <Link
+                href="/catalogues"
+                className="block text-[#f7c25a] hover:text-[#ffd978] transition"
+              >
                 Catalogues
               </Link>
-              <Link className="text-white/60 hover:text-[#f7c25a] transition" href="/contact">
+
+              <Link
+                href="/contact"
+                className="block text-[#f7c25a] hover:text-[#ffd978] transition"
+              >
                 Contact
               </Link>
+
             </div>
 
-            <div className="space-y-2">
-              <Link className="text-white/60 hover:text-[#f7c25a] transition" href="/cart">
+            <div className="space-y-3">
+
+              <Link
+                href="/cart"
+                className="block text-[#f7c25a] hover:text-[#ffd978] transition"
+              >
                 Cart
               </Link>
+
               <Link
-                className="text-white/60 hover:text-[#f7c25a] transition"
                 href="/products?category=all-season"
+                className="block text-[#f7c25a] hover:text-[#ffd978] transition"
               >
                 All Season
               </Link>
+
               <Link
-                className="text-white/60 hover:text-[#f7c25a] transition"
                 href="/products?category=winter"
+                className="block text-[#f7c25a] hover:text-[#ffd978] transition"
               >
                 Winter
               </Link>
+
             </div>
+
           </div>
         </div>
 
-        {/* Right: Contact */}
-        <div className="text-left">
-          <h4 className="text-lg font-semibold mb-4 text-white">
-            Support
-          </h4>
+        {/* SUPPORT */}
+        <div>
+          <h4 className="text-lg font-bold text-white">Support</h4>
 
-          <ul className="text-sm space-y-2 text-white/60">
+          <div className="w-14 h-[2px] bg-[#f7c25a] mt-3 mb-5" />
+
+          <ul className="text-sm space-y-3 text-white/70">
+
             <li>
               <a
-                href="mailto:support@ogtires.com"
-                className="hover:text-[#f7c25a] transition"
+                href="mailto:Ogtiresandrims@gmail.com"
+                className="text-[#f7c25a] hover:text-[#ffd978] transition"
               >
-                support@ogtires.com
+                Ogtiresandrims@gmail.com
               </a>
             </li>
+
             <li>
               <a
-                href="tel:+910000000000"
-                className="hover:text-[#f7c25a] transition"
+                href="tel:+916047123870"
+                className="text-[#f7c25a] hover:text-[#ffd978] transition"
               >
-                +91 00000 00000
+                +91 60471 23870
               </a>
             </li>
-            <li className="font-semibold text-white/80">
+
+            <li className="text-white/80 font-semibold">
               Hours: 9 AM – 7 PM
             </li>
-            <li className="text-xs text-white/40">
-              Premium demo interface — backend integration coming soon.
+
+            <li className="text-xs text-white/40 max-w-xs">
+              Premium tyre catalogue interface designed for a luxury browsing
+              experience.
             </li>
+
           </ul>
         </div>
+
       </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-white/10 py-4 text-center text-sm text-white/50">
+      {/* BOTTOM BAR */}
+      <div className="border-t border-[#f7c25a]/10 py-4 text-center text-sm text-white/50">
         © {new Date().getFullYear()}{" "}
-        <span className="font-semibold text-white">
+        <span className="text-[#f7c25a] font-semibold">
           OG Tires & Rims
         </span>. All rights reserved.
       </div>
+
     </footer>
   );
 }
