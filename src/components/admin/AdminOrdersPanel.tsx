@@ -2,7 +2,15 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "@headlessui/react";
-import { X, RefreshCw, Search, Package, Phone, MapPin, CarFront } from "lucide-react";
+import {
+  X,
+  RefreshCw,
+  Search,
+  Package,
+  Phone,
+  MapPin,
+  CarFront,
+} from "lucide-react";
 
 /* =========================
    API base
@@ -23,7 +31,11 @@ const API = getApiBase();
 
 function readToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || null;
+  return (
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken") ||
+    null
+  );
 }
 
 function cn(...xs: Array<string | false | null | undefined>) {
@@ -66,7 +78,12 @@ type Booking = {
   items?: BookingItem[];
 };
 
-const BOOKING_STATUSES: BookingStatus[] = ["PENDING", "CONFIRMED", "CANCELLED", "DELIVERED"];
+const BOOKING_STATUSES: BookingStatus[] = [
+  "PENDING",
+  "CONFIRMED",
+  "CANCELLED",
+  "DELIVERED",
+];
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
   PENDING: "border-yellow-500/25 bg-yellow-500/10 text-yellow-100",
@@ -157,8 +174,15 @@ function SummaryCard({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-3xl border border-white/10 bg-white/5 p-5", className)}>
-      <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">{label}</div>
+    <div
+      className={cn(
+        "rounded-3xl border border-white/10 bg-white/5 p-5",
+        className
+      )}
+    >
+      <div className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">
+        {label}
+      </div>
       <div className="mt-2 text-3xl font-black text-white">{value}</div>
     </div>
   );
@@ -174,13 +198,21 @@ export default function AdminBookingsPanel() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
 
-  const [alert, setAlert] = useState<{ type: "success" | "error"; message: string; open: boolean } | null>(null);
+  const [alert, setAlert] = useState<{
+    type: "success" | "error";
+    message: string;
+    open: boolean;
+  } | null>(null);
   const alertTimerRef = useRef<number | null>(null);
 
   const [changedIds, setChangedIds] = useState<Set<number>>(new Set());
   const [selected, setSelected] = useState<Booking | null>(null);
 
-  function showAlert(type: "success" | "error", message: string, timeout = 3500) {
+  function showAlert(
+    type: "success" | "error",
+    message: string,
+    timeout = 3500
+  ) {
     if (alertTimerRef.current) {
       window.clearTimeout(alertTimerRef.current);
       alertTimerRef.current = null;
@@ -222,7 +254,9 @@ export default function AdminBookingsPanel() {
       const params = new URLSearchParams();
       if (statusFilter) params.set("status", statusFilter);
 
-      const json = await apiFetch(`/bookings${params.toString() ? `?${params.toString()}` : ""}`);
+      const json = await apiFetch(
+        `/bookings${params.toString() ? `?${params.toString()}` : ""}`
+      );
       const list: Booking[] = Array.isArray(json?.items) ? json.items : [];
 
       setRows(list);
@@ -271,10 +305,18 @@ export default function AdminBookingsPanel() {
       flashRow(id);
 
       if (updatedBooking?.id) {
-        setRows((prev) => prev.map((b) => (b.id === updatedBooking.id ? { ...b, ...updatedBooking } : b)));
-        setSelected((cur) => (cur?.id === updatedBooking.id ? updatedBooking : cur));
+        setRows((prev) =>
+          prev.map((b) =>
+            b.id === updatedBooking.id ? { ...b, ...updatedBooking } : b
+          )
+        );
+        setSelected((cur) =>
+          cur?.id === updatedBooking.id ? updatedBooking : cur
+        );
       } else {
-        setRows((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
+        setRows((prev) =>
+          prev.map((b) => (b.id === id ? { ...b, status } : b))
+        );
         setSelected((cur) => (cur?.id === id ? { ...cur, status } : cur));
       }
     } catch (err: any) {
@@ -348,14 +390,18 @@ export default function AdminBookingsPanel() {
             <div
               className={cn(
                 "fixed right-4 top-4 z-50 w-full max-w-sm rounded-2xl border px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur",
-                alert.type === "success" && "border-emerald-500/25 bg-emerald-500/10 text-emerald-100",
-                alert.type === "error" && "border-red-500/25 bg-red-500/10 text-red-100"
+                alert.type === "success" &&
+                  "border-emerald-500/25 bg-emerald-500/10 text-emerald-100",
+                alert.type === "error" &&
+                  "border-red-500/25 bg-red-500/10 text-red-100"
               )}
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1 text-sm">{alert.message}</div>
                 <button
-                  onClick={() => setAlert((a) => (a ? { ...a, open: false } : a))}
+                  onClick={() =>
+                    setAlert((a) => (a ? { ...a, open: false } : a))
+                  }
                   className="rounded-xl p-1 hover:bg-white/10"
                 >
                   <X className="h-4 w-4" />
@@ -373,7 +419,8 @@ export default function AdminBookingsPanel() {
                 Bookings Manager
               </h2>
               <p className="mt-1 text-sm text-white/70">
-                View booking requests, inspect booked tyres, and update order status.
+                View booking requests, inspect booked tyres, and update order
+                status.
               </p>
             </div>
 
@@ -388,10 +435,26 @@ export default function AdminBookingsPanel() {
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <SummaryCard label="Total" value={stats.total} />
-            <SummaryCard label="Pending" value={stats.pending} className="border-yellow-500/15 bg-yellow-500/5" />
-            <SummaryCard label="Confirmed" value={stats.confirmed} className="border-sky-500/15 bg-sky-500/5" />
-            <SummaryCard label="Cancelled" value={stats.cancelled} className="border-red-500/15 bg-red-500/5" />
-            <SummaryCard label="Delivered" value={stats.delivered} className="border-emerald-500/15 bg-emerald-500/5" />
+            <SummaryCard
+              label="Pending"
+              value={stats.pending}
+              className="border-yellow-500/15 bg-yellow-500/5"
+            />
+            <SummaryCard
+              label="Confirmed"
+              value={stats.confirmed}
+              className="border-sky-500/15 bg-sky-500/5"
+            />
+            <SummaryCard
+              label="Cancelled"
+              value={stats.cancelled}
+              className="border-red-500/15 bg-red-500/5"
+            />
+            <SummaryCard
+              label="Delivered"
+              value={stats.delivered}
+              className="border-emerald-500/15 bg-emerald-500/5"
+            />
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur">
@@ -481,20 +544,32 @@ export default function AdminBookingsPanel() {
                           changedIds.has(b.id) && "bg-[#f7c25a]/10"
                         )}
                       >
-                        <td className="p-3 align-top font-semibold text-white/90">#{b.id}</td>
-
-                        <td className="p-3 align-top">
-                          <div className="font-semibold text-white/90">{b.customer_name}</div>
-                          <div className="mt-1 text-xs text-white/50">{b.email || "-"}</div>
+                        <td className="p-3 align-top font-semibold text-white/90">
+                          #{b.id}
                         </td>
 
-                        <td className="p-3 align-top text-white/80">{b.phone}</td>
+                        <td className="p-3 align-top">
+                          <div className="font-semibold text-white/90">
+                            {b.customer_name}
+                          </div>
+                          <div className="mt-1 text-xs text-white/50">
+                            {b.email || "-"}
+                          </div>
+                        </td>
 
-                        <td className="p-3 align-top text-white/70">{b.city || "-"}</td>
+                        <td className="p-3 align-top text-white/80">
+                          {b.phone}
+                        </td>
+
+                        <td className="p-3 align-top text-white/70">
+                          {b.city || "-"}
+                        </td>
 
                         <td className="p-3 align-top text-white/70">
                           <div>{b.vehicle_make_model || "-"}</div>
-                          <div className="text-xs text-white/45">{b.vehicle_year || "-"}</div>
+                          <div className="text-xs text-white/45">
+                            {b.vehicle_year || "-"}
+                          </div>
                         </td>
 
                         <td className="p-3 align-top text-white/70">
@@ -508,7 +583,12 @@ export default function AdminBookingsPanel() {
                           <select
                             disabled={busyId === b.id}
                             value={b.status}
-                            onChange={(e) => updateBookingStatus(b.id, e.target.value as BookingStatus)}
+                            onChange={(e) =>
+                              updateBookingStatus(
+                                b.id,
+                                e.target.value as BookingStatus
+                              )
+                            }
                             className={cn(
                               "rounded-2xl border bg-black/30 px-3 py-2 text-xs font-extrabold outline-none",
                               STATUS_STYLES[b.status]
@@ -522,7 +602,9 @@ export default function AdminBookingsPanel() {
                           </select>
                         </td>
 
-                        <td className="p-3 align-top text-white/60">{prettyDate(b.created_at)}</td>
+                        <td className="p-3 align-top text-white/60">
+                          {prettyDate(b.created_at)}
+                        </td>
 
                         <td className="p-3 align-top">
                           <button
@@ -530,7 +612,7 @@ export default function AdminBookingsPanel() {
                               const full = await fetchBookingDetails(b.id);
                               setSelected(full || b);
                             }}
-                            className="rounded-2xl bg-[#f7c25a] px-4 py-2 text-xs font-extrabold text-black hover:brightness-110"
+                            className="inline-flex items-center justify-center rounded-2xl border border-[#f7c25a]/40 bg-[#111111] px-4 py-2 text-xs font-extrabold text-white shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition hover:border-[#f7c25a]/70 hover:bg-[#1a1a1a] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#f7c25a]/30"
                           >
                             View Details
                           </button>
@@ -576,7 +658,11 @@ export default function AdminBookingsPanel() {
             </div>
           </div>
 
-          <Dialog open={!!selected} onClose={() => setSelected(null)} className="relative z-[60]">
+          <Dialog
+            open={!!selected}
+            onClose={() => setSelected(null)}
+            className="relative z-[60]"
+          >
             <div className="fixed inset-0 bg-black/75" aria-hidden="true" />
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <Dialog.Panel className="w-full max-w-5xl rounded-3xl border border-white/10 bg-[#0b0b0b] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
@@ -609,9 +695,13 @@ export default function AdminBookingsPanel() {
                             Customer
                           </span>
                         </div>
-                        <div className="font-semibold text-white">{selected.customer_name}</div>
+                        <div className="font-semibold text-white">
+                          {selected.customer_name}
+                        </div>
                         <div className="mt-1 text-white/75">{selected.phone}</div>
-                        <div className="mt-1 text-white/60">{selected.email || "-"}</div>
+                        <div className="mt-1 text-white/60">
+                          {selected.email || "-"}
+                        </div>
                       </div>
 
                       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -622,9 +712,12 @@ export default function AdminBookingsPanel() {
                           </span>
                         </div>
                         <div className="text-white/80">{selected.city || "-"}</div>
-                        <div className="mt-1 text-white/70">{selected.address_line || "-"}</div>
+                        <div className="mt-1 text-white/70">
+                          {selected.address_line || "-"}
+                        </div>
                         <div className="mt-1 text-white/60">
-                          {selected.landmark || "-"} {selected.pincode ? `• ${selected.pincode}` : ""}
+                          {selected.landmark || "-"}{" "}
+                          {selected.pincode ? `• ${selected.pincode}` : ""}
                         </div>
                       </div>
 
@@ -638,7 +731,9 @@ export default function AdminBookingsPanel() {
                         <div className="font-semibold text-white">
                           {selected.vehicle_make_model || "-"}
                         </div>
-                        <div className="mt-1 text-white/70">{selected.vehicle_year || "-"}</div>
+                        <div className="mt-1 text-white/70">
+                          {selected.vehicle_year || "-"}
+                        </div>
                       </div>
 
                       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -666,12 +761,17 @@ export default function AdminBookingsPanel() {
                         </div>
 
                         <div className="mt-4">
-                          <label className="text-xs text-white/50">Update status</label>
+                          <label className="text-xs text-white/50">
+                            Update status
+                          </label>
                           <select
                             disabled={busyId === selected.id}
                             value={selected.status}
                             onChange={(e) =>
-                              updateBookingStatus(selected.id, e.target.value as BookingStatus)
+                              updateBookingStatus(
+                                selected.id,
+                                e.target.value as BookingStatus
+                              )
                             }
                             className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-[#f7c25a]/60"
                           >
@@ -723,7 +823,8 @@ export default function AdminBookingsPanel() {
                                     Size: {it.size || "-"}
                                   </div>
                                   <div className="mt-1 text-sm text-white/60">
-                                    Category: {it.category_title || it.category_slug || "-"}
+                                    Category:{" "}
+                                    {it.category_title || it.category_slug || "-"}
                                   </div>
                                   <div className="mt-1 text-xs text-white/45">
                                     Tyre ID: {it.tyre_id}
