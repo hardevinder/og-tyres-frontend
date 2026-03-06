@@ -36,13 +36,9 @@ function GoldPill({ children }: { children: React.ReactNode }) {
 function sanitizeRedirect(raw: string | null) {
   const r = (raw || "").trim();
 
-  // default: admin
   if (!r) return "/admin";
-
-  // allow only internal paths
   if (!r.startsWith("/")) return "/admin";
 
-  // avoid redirecting back to login/signup
   const base = r.split("?")[0].split("#")[0];
   if (base === "/login" || base === "/signup") return "/admin";
 
@@ -53,7 +49,6 @@ export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ✅ default redirect is /admin
   const redirectTo = useMemo(
     () => sanitizeRedirect(searchParams?.get("redirectTo")),
     [searchParams]
@@ -62,6 +57,7 @@ export default function LoginClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -135,7 +131,6 @@ export default function LoginClient() {
       if (remember) localStorage.setItem("accessToken", token);
       else sessionStorage.setItem("accessToken", token);
 
-      // store user (backend returns user)
       if (data?.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
       } else {
@@ -143,8 +138,6 @@ export default function LoginClient() {
       }
 
       notifyAuthChange();
-
-      // ✅ redirect to admin (or safe redirectTo)
       router.replace(redirectTo || "/admin");
     } catch (err: any) {
       setError(err?.message || "Network error");
@@ -179,7 +172,7 @@ export default function LoginClient() {
                 </div>
 
                 <div className="shrink-0">
-                  <div className="h-12 w-12 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center overflow-hidden">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5">
                     <div className="relative h-10 w-10">
                       <Image
                         src="/brand/og-logo.png"
@@ -219,15 +212,26 @@ export default function LoginClient() {
                   <label className="block text-sm font-semibold text-white/80">
                     Password
                   </label>
-                  <input
-                    type="password"
-                    className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#f7c25a]/60 focus:ring-2 focus:ring-[#f7c25a]/20"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    autoComplete="current-password"
-                  />
+
+                  <div className="relative mt-1">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 pr-20 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#f7c25a]/60 focus:ring-2 focus:ring-[#f7c25a]/20"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      autoComplete="current-password"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl border border-[#f7c25a]/25 bg-[#f7c25a]/10 px-3 py-1.5 text-xs font-bold text-[#f7c25a] transition hover:bg-[#f7c25a]/18"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -241,13 +245,13 @@ export default function LoginClient() {
                     Remember me
                   </label>
 
-                  <span className="text-xs text-white/40">{/* removed */}</span>
+                  <span className="text-xs text-white/40"></span>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-2xl bg-[#f7c25a] px-5 py-3 text-sm font-extrabold text-black hover:brightness-110 disabled:opacity-60"
+                  className="w-full rounded-2xl bg-[#f7c25a] px-5 py-3 text-sm font-extrabold text-black transition hover:brightness-110 disabled:opacity-60"
                 >
                   {loading ? "Signing in..." : "Sign in"}
                 </button>
@@ -266,7 +270,7 @@ export default function LoginClient() {
                 <div className="pt-3 text-center">
                   <Link
                     href="/"
-                    className="text-xs font-semibold text-white/60 hover:text-[#f7c25a] transition"
+                    className="text-xs font-semibold text-white/60 transition hover:text-[#f7c25a]"
                   >
                     ← Back to Home
                   </Link>
