@@ -57,10 +57,12 @@ function GoldPill({ children }: { children: React.ReactNode }) {
 function Field({
   label,
   required,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -69,39 +71,66 @@ function Field({
         {label} {required ? <span className="text-[#f7c25a]">*</span> : null}
       </div>
       {children}
+      {error ? (
+        <div className="mt-2 text-xs font-semibold text-red-300">{error}</div>
+      ) : null}
     </label>
   );
 }
 
-function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+function Input(
+  props: React.InputHTMLAttributes<HTMLInputElement> & {
+    hasError?: boolean;
+  }
+) {
+  const { hasError, className, ...rest } = props;
+
   return (
     <input
-      {...props}
-      className={`w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-[#f7c25a]/40 focus:bg-black/35 ${
-        props.className || ""
-      }`}
+      {...rest}
+      className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 ${
+        hasError
+          ? "border-red-400/70 bg-red-500/10 focus:border-red-400 focus:bg-red-500/10"
+          : "border-white/10 bg-black/25 focus:border-[#f7c25a]/40 focus:bg-black/35"
+      } ${className || ""}`}
     />
   );
 }
 
-function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+function TextArea(
+  props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+    hasError?: boolean;
+  }
+) {
+  const { hasError, className, ...rest } = props;
+
   return (
     <textarea
-      {...props}
-      className={`w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-[#f7c25a]/40 focus:bg-black/35 ${
-        props.className || ""
-      }`}
+      {...rest}
+      className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 ${
+        hasError
+          ? "border-red-400/70 bg-red-500/10 focus:border-red-400 focus:bg-red-500/10"
+          : "border-white/10 bg-black/25 focus:border-[#f7c25a]/40 focus:bg-black/35"
+      } ${className || ""}`}
     />
   );
 }
 
-function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+function Select(
+  props: React.SelectHTMLAttributes<HTMLSelectElement> & {
+    hasError?: boolean;
+  }
+) {
+  const { hasError, className, ...rest } = props;
+
   return (
     <select
-      {...props}
-      className={`w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition focus:border-[#f7c25a]/40 focus:bg-black/35 ${
-        props.className || ""
-      }`}
+      {...rest}
+      className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition ${
+        hasError
+          ? "border-red-400/70 bg-red-500/10 focus:border-red-400 focus:bg-red-500/10"
+          : "border-white/10 bg-black/25 focus:border-[#f7c25a]/40 focus:bg-black/35"
+      } ${className || ""}`}
     />
   );
 }
@@ -132,6 +161,12 @@ export default function BookPageClient() {
     qty: initialQty,
   });
 
+  const [fieldErrors, setFieldErrors] = useState<{
+    customer_name?: string;
+    phone?: string;
+    qty?: string;
+  }>({});
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<any>(null);
@@ -145,28 +180,64 @@ export default function BookPageClient() {
     );
   }, [form, tyreId]);
 
-  function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+  function update<K extends keyof typeof form>(
+    key: K,
+    value: (typeof form)[K]
+  ) {
     setForm((prev) => ({ ...prev, [key]: value }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      if (key === "customer_name") delete next.customer_name;
+      if (key === "phone") delete next.phone;
+      if (key === "qty") delete next.qty;
+      return next;
+    });
+  }
+
+  function validateForm() {
+    const nextErrors: {
+      customer_name?: string;
+      phone?: string;
+      qty?: string;
+    } = {};
+
+    if (!tyreId) {
+      setError("Missing tyre id. Please go back and select a tyre again.");
+      return false;
+    }
+
+    if (!form.customer_name.trim()) {
+      nextErrors.customer_name = "Customer name is required.";
+    } else if (form.customer_name.trim().length < 2) {
+      nextErrors.customer_name = "Please enter a valid customer name.";
+    }
+
+    if (!form.phone.trim()) {
+      nextErrors.phone = "Phone number is required.";
+    } else if (form.phone.trim().length < 6) {
+      nextErrors.phone = "Please enter a valid phone number.";
+    }
+
+    if (!Number(form.qty) || Number(form.qty) < 1) {
+      nextErrors.qty = "Quantity must be at least 1.";
+    }
+
+    setFieldErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      setError("Please fill all required fields correctly.");
+      return false;
+    }
+
+    return true;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (!tyreId) {
-      setError("Missing tyre id. Please go back and select a tyre again.");
-      return;
-    }
-
-    if (!form.customer_name.trim()) {
-      setError("Customer name is required.");
-      return;
-    }
-
-    if (!form.phone.trim()) {
-      setError("Phone is required.");
-      return;
-    }
+    if (!validateForm()) return;
 
     const payload = {
       customer_name: form.customer_name.trim(),
@@ -236,8 +307,9 @@ export default function BookPageClient() {
                   Your booking request has been received
                 </h1>
                 <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-                  Thank you for choosing OG Tyres. Our team will review your request and connect
-                  with you soon regarding availability, confirmation, and fitment details.
+                  Thank you for choosing OG Tyres. Our team will review your
+                  request and connect with you soon regarding availability,
+                  confirmation, and fitment details.
                 </p>
 
                 {booked ? (
@@ -249,28 +321,37 @@ export default function BookPageClient() {
 
               <div className="mt-8 grid gap-4 rounded-[28px] border border-white/10 bg-black/25 p-5 md:grid-cols-[180px_1fr]">
                 <div className="relative mx-auto h-40 w-40 overflow-hidden rounded-3xl border border-white/10 bg-white">
-                  <Image src={image} alt={product} fill className="object-contain p-4" />
+                  <Image
+                    src={image}
+                    alt={product}
+                    fill
+                    className="object-contain p-4"
+                  />
                 </div>
 
                 <div className="flex flex-col justify-center">
                   <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
                     Selected Tyre
                   </div>
-                  <div className="mt-2 text-2xl font-black text-white">{product}</div>
+                  <div className="mt-2 text-2xl font-black text-white">
+                    {product}
+                  </div>
                   <div className="mt-2 text-sm text-white/75">Size: {size}</div>
                   <div className="mt-1 text-sm text-white/75">
                     Category: {category || "General"}
                   </div>
-                  <div className="mt-1 text-sm text-white/75">Quantity: {form.qty}</div>
+                  <div className="mt-1 text-sm text-white/75">
+                    Quantity: {form.qty}
+                  </div>
                 </div>
               </div>
 
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link
                   href="/products"
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#f7c25a] px-6 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
+                  className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
                 >
-                  Browse More Tyres
+                  Book Another Tyre
                 </Link>
 
                 <Link
@@ -303,13 +384,19 @@ export default function BookPageClient() {
               </h1>
 
               <p className="mt-4 text-sm leading-7 text-white/75 md:text-base">
-                Review your selected tyre, fill in your vehicle and contact details, and submit
-                your booking request. Our team will follow up with confirmation and assistance.
+                Review your selected tyre, fill in your vehicle and contact
+                details, and submit your booking request. Our team will follow
+                up with confirmation and assistance.
               </p>
 
               <div className="mt-6 rounded-[28px] border border-white/10 bg-black/25 p-4">
                 <div className="relative h-60 w-full overflow-hidden rounded-[24px] border border-white/10 bg-white">
-                  <Image src={image} alt={product} fill className="object-contain p-6" />
+                  <Image
+                    src={image}
+                    alt={product}
+                    fill
+                    className="object-contain p-6"
+                  />
                 </div>
 
                 <div className="mt-5">
@@ -317,14 +404,18 @@ export default function BookPageClient() {
                     Selected Tyre
                   </div>
 
-                  <div className="mt-2 text-2xl font-black text-white">{product}</div>
+                  <div className="mt-2 text-2xl font-black text-white">
+                    {product}
+                  </div>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
                       <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
                         Size
                       </div>
-                      <div className="mt-1 text-sm font-bold text-white">{size}</div>
+                      <div className="mt-1 text-sm font-bold text-white">
+                        {size}
+                      </div>
                     </div>
 
                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
@@ -338,7 +429,8 @@ export default function BookPageClient() {
                   </div>
 
                   <div className="mt-4 rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/8 px-4 py-3 text-sm text-[#f7c25a]">
-                    Please confirm quantity and share your preferred schedule for quicker follow-up.
+                    Please confirm quantity and share your preferred schedule
+                    for quicker follow-up.
                   </div>
                 </div>
               </div>
@@ -362,25 +454,38 @@ export default function BookPageClient() {
 
               {!tyreId ? (
                 <div className="mb-5 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
-                  Tyre details are missing. Please go back to products page and select a tyre first.
+                  Tyre details are missing. Please go back to products page and
+                  select a tyre first.
                 </div>
               ) : null}
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-5 md:grid-cols-2">
-                  <Field label="Customer Name" required>
+                  <Field
+                    label="Customer Name"
+                    required
+                    error={fieldErrors.customer_name}
+                  >
                     <Input
                       value={form.customer_name}
-                      onChange={(e) => update("customer_name", e.target.value)}
+                      onChange={(e) =>
+                        update("customer_name", e.target.value)
+                      }
                       placeholder="Enter your full name"
+                      hasError={!!fieldErrors.customer_name}
                     />
                   </Field>
 
-                  <Field label="Phone Number" required>
+                  <Field
+                    label="Phone Number"
+                    required
+                    error={fieldErrors.phone}
+                  >
                     <Input
                       value={form.phone}
                       onChange={(e) => update("phone", e.target.value)}
                       placeholder="Enter your phone number"
+                      hasError={!!fieldErrors.phone}
                     />
                   </Field>
                 </div>
@@ -434,7 +539,9 @@ export default function BookPageClient() {
                   <Field label="Vehicle Make / Model">
                     <Input
                       value={form.vehicle_make_model}
-                      onChange={(e) => update("vehicle_make_model", e.target.value)}
+                      onChange={(e) =>
+                        update("vehicle_make_model", e.target.value)
+                      }
                       placeholder="e.g. Mahindra Thar"
                     />
                   </Field>
@@ -449,12 +556,18 @@ export default function BookPageClient() {
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-3">
-                  <Field label="Quantity" required>
+                  <Field label="Quantity" required error={fieldErrors.qty}>
                     <Input
                       type="number"
                       min={1}
                       value={form.qty}
-                      onChange={(e) => update("qty", Math.max(1, Number(e.target.value || 1)))}
+                      onChange={(e) =>
+                        update(
+                          "qty",
+                          Math.max(1, Number(e.target.value || 1))
+                        )
+                      }
+                      hasError={!!fieldErrors.qty}
                     />
                   </Field>
 
@@ -463,14 +576,18 @@ export default function BookPageClient() {
                       type="date"
                       min={todayStr()}
                       value={form.preferred_date}
-                      onChange={(e) => update("preferred_date", e.target.value)}
+                      onChange={(e) =>
+                        update("preferred_date", e.target.value)
+                      }
                     />
                   </Field>
 
                   <Field label="Preferred Time">
                     <Select
                       value={form.preferred_time}
-                      onChange={(e) => update("preferred_time", e.target.value)}
+                      onChange={(e) =>
+                        update("preferred_time", e.target.value)
+                      }
                     >
                       <option value="">Select preferred time</option>
                       <option value="Morning">Morning</option>
@@ -499,14 +616,18 @@ export default function BookPageClient() {
                       <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
                         Product
                       </div>
-                      <div className="mt-1 text-sm font-bold text-white">{product}</div>
+                      <div className="mt-1 text-sm font-bold text-white">
+                        {product}
+                      </div>
                     </div>
 
                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
                       <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
                         Qty
                       </div>
-                      <div className="mt-1 text-sm font-bold text-white">{form.qty}</div>
+                      <div className="mt-1 text-sm font-bold text-white">
+                        {form.qty}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -514,17 +635,17 @@ export default function BookPageClient() {
                 <div className="flex flex-wrap gap-3 pt-2">
                   <button
                     type="submit"
-                    disabled={!canSubmit || submitting || !tyreId}
-                    className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-[#f7c25a] px-6 py-3 text-sm font-extrabold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={submitting || !tyreId}
+                    className="inline-flex min-w-[220px] items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {submitting ? "Submitting..." : "Confirm Booking Request"}
+                    {submitting ? "Booking..." : "Book Now"}
                   </button>
 
                   <Link
                     href="/products"
                     className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
                   >
-                    Back to Products
+                    Continue Shopping
                   </Link>
                 </div>
               </form>

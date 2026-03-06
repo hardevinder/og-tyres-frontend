@@ -2,8 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Truck, Layers } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LayoutDashboard, Package, Truck, Layers, LogOut } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -13,6 +13,7 @@ export default function AdminLayout({
   userName?: string | null;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const navLinks = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -26,41 +27,52 @@ export default function AdminLayout({
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  function handleLogout() {
+    try {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("accessToken");
+
+      window.dispatchEvent(new Event("auth"));
+
+      router.replace("/login");
+    } catch {
+      router.replace("/login");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] text-white">
       <div className="relative min-h-screen overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 bg-[radial-gradient(1000px_550px_at_14%_18%,rgba(247,194,90,0.18),transparent_60%),radial-gradient(900px_520px_at_84%_16%,rgba(247,194,90,0.10),transparent_58%),linear-gradient(to_bottom,rgba(255,255,255,0.02),rgba(255,255,255,0))]" />
         <div className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:56px_56px]" />
-        <div className="absolute -left-24 top-20 h-72 w-72 rounded-full bg-[#f7c25a]/10 blur-3xl" />
-        <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-[#f7c25a]/10 blur-3xl" />
 
         <div className="relative flex min-h-screen flex-col">
           {/* Header */}
           <header className="sticky top-0 z-50 border-b border-[#f7c25a]/15 bg-black/70 backdrop-blur-xl">
             <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-3">
-                <Link href="/admin" className="inline-flex items-center gap-3">
-                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[#f7c25a]/35 bg-[linear-gradient(180deg,rgba(247,194,90,0.18),rgba(247,194,90,0.08))] text-sm font-extrabold text-[#f7c25a] shadow-[0_10px_30px_rgba(247,194,90,0.16)]">
-                    OG
-                  </span>
 
-                  <span className="leading-tight">
-                    <div className="bg-gradient-to-r from-[#f7c25a] via-[#f3d27d] to-[#d79b2b] bg-clip-text text-xl font-extrabold tracking-tight text-transparent sm:text-2xl">
-                      OG Tyres & Rims
-                    </div>
-                    <div className="mt-0.5 text-xs font-medium tracking-wide text-[#f7c25a]/80">
-                      Admin panel — manage catalogue & bookings
-                    </div>
-                  </span>
-                </Link>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="hidden items-center rounded-full border border-[#f7c25a]/25 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold tracking-wide text-[#f7c25a] sm:inline-flex">
-                  OG Gold Edition
+              {/* Logo */}
+              <Link href="/admin" className="inline-flex items-center gap-3">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[#f7c25a]/35 bg-[linear-gradient(180deg,rgba(247,194,90,0.18),rgba(247,194,90,0.08))] text-sm font-extrabold text-[#f7c25a] shadow-[0_10px_30px_rgba(247,194,90,0.16)]">
+                  OG
                 </span>
 
+                <span className="leading-tight">
+                  <div className="bg-gradient-to-r from-[#f7c25a] via-[#f3d27d] to-[#d79b2b] bg-clip-text text-xl font-extrabold tracking-tight text-transparent sm:text-2xl">
+                    OG Tyres & Rims
+                  </div>
+                  <div className="mt-0.5 text-xs font-medium tracking-wide text-[#f7c25a]/80">
+                    Admin panel — manage catalogue & bookings
+                  </div>
+                </span>
+              </Link>
+
+              {/* Right Side */}
+              <div className="flex items-center gap-3">
+
+                {/* User */}
                 <div className="rounded-full border border-[#f7c25a]/15 bg-[#f7c25a]/[0.06] px-3 py-1.5 text-sm font-medium text-[#f7c25a]/85">
                   {userName ? (
                     <span className="inline-flex items-center gap-2">
@@ -71,6 +83,16 @@ export default function AdminLayout({
                     "Admin Panel"
                   )}
                 </div>
+
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="group inline-flex items-center gap-2 rounded-xl border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-4 py-2 text-sm font-bold text-[#f7c25a] transition-all hover:border-[#f7c25a] hover:bg-[#f7c25a]/20 hover:shadow-[0_0_18px_rgba(247,194,90,0.35)]"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+
               </div>
             </div>
 
@@ -87,16 +109,12 @@ export default function AdminLayout({
                       className={[
                         "group inline-flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-sm font-bold transition-all duration-200",
                         active
-                          ? "border-[#f7c25a]/35 bg-[linear-gradient(180deg,rgba(247,194,90,0.18),rgba(247,194,90,0.10))] text-[#f7c25a] shadow-[0_14px_35px_rgba(247,194,90,0.14)]"
-                          : "border-[#f7c25a]/18 bg-[linear-gradient(180deg,rgba(247,194,90,0.09),rgba(247,194,90,0.05))] text-[#f7c25a] hover:border-[#f7c25a]/32 hover:bg-[linear-gradient(180deg,rgba(247,194,90,0.15),rgba(247,194,90,0.08))] hover:shadow-[0_10px_26px_rgba(247,194,90,0.10)]",
+                          ? "border-[#f7c25a]/35 bg-[linear-gradient(180deg,rgba(247,194,90,0.18),rgba(247,194,90,0.10))] text-[#f7c25a]"
+                          : "border-[#f7c25a]/18 bg-[linear-gradient(180deg,rgba(247,194,90,0.09),rgba(247,194,90,0.05))] text-[#f7c25a]",
                       ].join(" ")}
                     >
-                      <Icon
-                        className={`h-4 w-4 shrink-0 ${
-                          active ? "text-[#f7c25a]" : "text-[#f7c25a]/95"
-                        }`}
-                      />
-                      <span className="whitespace-nowrap text-[#f7c25a]">{label}</span>
+                      <Icon className="h-4 w-4" />
+                      <span>{label}</span>
                     </Link>
                   );
                 })}

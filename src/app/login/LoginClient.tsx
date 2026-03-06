@@ -32,7 +32,7 @@ function GoldPill({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** ✅ Prevent redirect loop + open-redirect */
+/** Prevent redirect loop + open-redirect */
 function sanitizeRedirect(raw: string | null) {
   const r = (raw || "").trim();
 
@@ -77,9 +77,7 @@ export default function LoginClient() {
     try {
       window.dispatchEvent(new Event("auth"));
       localStorage.setItem("auth_update", String(Date.now()));
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
   async function fetchAndStoreUser(token: string) {
@@ -94,9 +92,7 @@ export default function LoginClient() {
       const meData = await res.json();
       const userObj = meData?.user || meData?.data || meData;
       if (userObj) localStorage.setItem("user", JSON.stringify(userObj));
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,7 +145,10 @@ export default function LoginClient() {
   return (
     <main className="min-h-screen bg-[#050505] text-white">
       <div className="relative min-h-screen overflow-hidden">
+
+        {/* Golden glow background */}
         <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_18%_22%,rgba(247,194,90,0.18),transparent_60%),radial-gradient(900px_500px_at_80%_20%,rgba(247,194,90,0.10),transparent_60%)]" />
+
         <div className="absolute inset-0 opacity-[0.18] bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:56px_56px]" />
 
         <div className="relative mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-14">
@@ -160,12 +159,16 @@ export default function LoginClient() {
             className="w-full max-w-md"
           >
             <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 shadow-[0_30px_80px_rgba(0,0,0,0.55)] backdrop-blur">
+
+              {/* Header */}
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <GoldPill>OG Gold Edition</GoldPill>
+
                   <h1 className="mt-3 text-2xl md:text-3xl font-extrabold tracking-tight">
                     Welcome back
                   </h1>
+
                   <p className="mt-1 text-sm text-white/70">
                     Sign in to manage your catalogue & bookings.
                   </p>
@@ -193,10 +196,13 @@ export default function LoginClient() {
               )}
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+
+                {/* Email */}
                 <div>
                   <label className="block text-sm font-semibold text-white/80">
                     Email
                   </label>
+
                   <input
                     type="email"
                     className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#f7c25a]/60 focus:ring-2 focus:ring-[#f7c25a]/20"
@@ -208,6 +214,7 @@ export default function LoginClient() {
                   />
                 </div>
 
+                {/* Password */}
                 <div>
                   <label className="block text-sm font-semibold text-white/80">
                     Password
@@ -234,6 +241,7 @@ export default function LoginClient() {
                   </div>
                 </div>
 
+                {/* Remember */}
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 text-sm text-white/70">
                     <input
@@ -244,18 +252,22 @@ export default function LoginClient() {
                     />
                     Remember me
                   </label>
-
-                  <span className="text-xs text-white/40"></span>
                 </div>
 
+                {/* ⭐ PREMIUM GOLD BUTTON */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-2xl bg-[#f7c25a] px-5 py-3 text-sm font-extrabold text-black transition hover:brightness-110 disabled:opacity-60"
+                  className="group relative w-full overflow-hidden rounded-2xl border border-[#f7c25a]/40 bg-black/40 px-5 py-3 text-sm font-extrabold text-[#f7c25a] backdrop-blur transition-all duration-300 hover:border-[#f7c25a] hover:shadow-[0_0_25px_rgba(247,194,90,0.35)] disabled:opacity-60"
                 >
-                  {loading ? "Signing in..." : "Sign in"}
+                  <span className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-[#f7c25a]/30 to-transparent transition-transform duration-700 group-hover:translate-x-[100%]" />
+
+                  <span className="relative z-10 tracking-wide">
+                    {loading ? "Signing in..." : "Sign In"}
+                  </span>
                 </button>
 
+                {/* Register */}
                 <div className="pt-2 text-center text-sm text-white/60">
                   Don’t have an account?{" "}
                   <button
@@ -275,6 +287,7 @@ export default function LoginClient() {
                     ← Back to Home
                   </Link>
                 </div>
+
               </form>
             </div>
 
