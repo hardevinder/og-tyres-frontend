@@ -290,7 +290,7 @@ export default function ProductsPage() {
       setErr(null);
 
       try {
-        const endpoints = [`${API}/tires`, `${API}/products`];
+        const endpoints = [`${API}/tyres`];
 
         let data: any = null;
         let lastError: any = null;
