@@ -202,7 +202,7 @@ export default function AdminCategoriesPanel() {
 
   /* ---------- Delete ---------- */
   async function handleDelete(id: number) {
-    if (!confirm("Delete category? This may fail if tyres exist under it."))
+    if (!confirm("Delete category? This may fail if tires exist under it."))
       return;
 
     try {

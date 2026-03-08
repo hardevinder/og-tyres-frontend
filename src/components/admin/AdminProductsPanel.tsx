@@ -66,7 +66,7 @@ function normalizeArrayResponse<T = any>(json: any): T[] {
   if (!json) return [];
   if (Array.isArray(json)) return json as T[];
   if (Array.isArray(json.data)) return json.data as T[];
-  if (Array.isArray(json.tyres)) return json.tyres as T[];
+  if (Array.isArray(json.tires)) return json.tires as T[];
   if (Array.isArray(json.categories)) return json.categories as T[];
   return [];
 }
@@ -118,7 +118,7 @@ async function uploadTyreImage(tyreId: number, file: File) {
   const fd = new FormData();
   fd.append("file", file, file.name);
 
-  const res = await fetch(`${API}/tyres/${tyreId}/image`, {
+  const res = await fetch(`${API}/tires/${tyreId}/image`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: fd,
@@ -140,7 +140,7 @@ async function uploadTyreImage(tyreId: number, file: File) {
 }
 
 export default function AdminProductsPanel() {
-  const [tyres, setTyres] = useState<Tyre[]>([]);
+  const [tires, setTires] = useState<Tyre[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -199,12 +199,12 @@ export default function AdminProductsPanel() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
   const headerPill = useMemo(() => {
-    const count = tyres.length;
+    const count = tires.length;
     return `${count} tyre${count === 1 ? "" : "s"}`;
-  }, [tyres.length]);
+  }, [tires.length]);
 
   useEffect(() => {
-    fetchTyres();
+    fetchTires();
     fetchCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -219,16 +219,16 @@ export default function AdminProductsPanel() {
     }
   }
 
-  async function fetchTyres() {
+  async function fetchTires() {
     setLoading(true);
     setError(null);
     try {
-      const json = await apiFetch("/tyres");
-      setTyres(normalizeArrayResponse<Tyre>(json));
+      const json = await apiFetch("/tires");
+      setTires(normalizeArrayResponse<Tyre>(json));
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "Failed to load");
-      setTyres([]);
+      setTires([]);
     } finally {
       setLoading(false);
     }
@@ -258,7 +258,7 @@ export default function AdminProductsPanel() {
         active: newActive,
       };
 
-      const createdResp = await apiFetch("/tyres", {
+      const createdResp = await apiFetch("/tires", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -281,9 +281,9 @@ export default function AdminProductsPanel() {
       }
 
       if (finalTyre?.id) {
-        setTyres((s) => [finalTyre!, ...s]);
+        setTires((s) => [finalTyre!, ...s]);
       } else {
-        await fetchTyres();
+        await fetchTires();
       }
 
       showToast("success", "Tyre created");
@@ -312,8 +312,8 @@ export default function AdminProductsPanel() {
   async function handleDelete(id: number) {
     if (!confirm("Delete tyre?")) return;
     try {
-      await apiFetch(`/tyres/${id}`, { method: "DELETE" });
-      setTyres((s) => s.filter((t) => t.id !== id));
+      await apiFetch(`/tires/${id}`, { method: "DELETE" });
+      setTires((s) => s.filter((t) => t.id !== id));
       showToast("success", "Tyre deleted");
     } catch (err: any) {
       console.error(err);
@@ -369,7 +369,7 @@ export default function AdminProductsPanel() {
       // optional: remove image (sets image_url null)
       if (eRemoveImage) payload.image_url = null;
 
-      const json = await apiFetch(`/tyres/${editingTyre.id}`, {
+      const json = await apiFetch(`/tires/${editingTyre.id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
@@ -390,9 +390,9 @@ export default function AdminProductsPanel() {
       }
 
       if (updated?.id) {
-        setTyres((s) => s.map((x) => (x.id === updated.id ? updated : x)));
+        setTires((s) => s.map((x) => (x.id === updated.id ? updated : x)));
       } else {
-        await fetchTyres();
+        await fetchTires();
       }
 
       setShowModal(false);
@@ -457,17 +457,17 @@ export default function AdminProductsPanel() {
                 OG Admin • {headerPill}
               </div>
               <h2 className="mt-3 text-2xl md:text-3xl font-extrabold tracking-tight">
-                Tyres Manager
+                Tires Manager
               </h2>
               <p className="mt-1 text-sm text-white/70">
-                Create, edit, manage tyres (OG Gold theme).
+                Create, edit, manage tires (OG Gold theme).
               </p>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  fetchTyres();
+                  fetchTires();
                   fetchCategories();
                 }}
                 className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10"
@@ -682,14 +682,14 @@ export default function AdminProductsPanel() {
               </form>
             </div>
 
-            {/* Tyres list */}
+            {/* Tires list */}
             <div className="lg:col-span-2 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur">
-              <h3 className="font-extrabold mb-3">Tyres</h3>
+              <h3 className="font-extrabold mb-3">Tires</h3>
 
               {loading ? (
                 <div className="text-white/70">Loading...</div>
-              ) : tyres.length === 0 ? (
-                <div className="text-white/60">No tyres</div>
+              ) : tires.length === 0 ? (
+                <div className="text-white/60">No tires</div>
               ) : (
                 <div className="overflow-x-auto rounded-2xl border border-white/10">
                   <table className="w-full text-sm border-collapse">
@@ -707,7 +707,7 @@ export default function AdminProductsPanel() {
                       </tr>
                     </thead>
                     <tbody>
-                      {tyres.map((t) => {
+                      {tires.map((t) => {
                         const catName =
                           categories.find((c) => c.id === Number(t.category_id))?.title ?? "-";
                         const img = t.image_url

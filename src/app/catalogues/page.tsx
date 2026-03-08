@@ -227,7 +227,7 @@ export default function CataloguePage() {
 
           {filtered.length === 0 && (
             <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-8 text-center text-white/60">
-              No tyres found. Try adjusting search.
+              No tires found. Try adjusting search.
             </div>
           )}
         </main>

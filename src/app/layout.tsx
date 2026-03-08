@@ -14,24 +14,24 @@ const metadataBase = new URL(siteUrl);
 export const metadata: Metadata = {
   metadataBase,
   title: {
-    default: "OG Tires & Rims – Premium Tyres Catalogue",
+    default: "OG Tires & Rims – Premium Tires Catalogue",
     template: "%s | OG Tires & Rims",
   },
   description:
-    "Explore premium tyres by category, brand, and size. Discover dependable options for performance, comfort, durability, and everyday driving with OG Tires & Rims.",
+    "Explore premium tires by category, brand, and size. Discover dependable options for performance, comfort, durability, and everyday driving with OG Tires & Rims.",
   keywords: [
-    "Tyres",
+    "Tires",
     "Tires",
     "Tyre shop",
     "Tire shop",
     "Tyre catalogue",
-    "Car tyres",
-    "SUV tyres",
-    "Truck tyres",
+    "Car tires",
+    "SUV tires",
+    "Truck tires",
     "Tyre size",
-    "All terrain tyres",
-    "Performance tyres",
-    "Winter tyres",
+    "All terrain tires",
+    "Performance tires",
+    "Winter tires",
     "OG Tires & Rims",
   ],
   authors: [{ name: "OG Tires & Rims" }],
@@ -42,17 +42,17 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "OG Tires & Rims – Premium Tyres Catalogue",
+    title: "OG Tires & Rims – Premium Tires Catalogue",
     description:
-      "Explore premium tyres by category, brand, and size with OG Tires & Rims.",
+      "Explore premium tires by category, brand, and size with OG Tires & Rims.",
     url: "/",
     siteName: "OG Tires & Rims",
     images: [
       {
-        url: "/og-tyres.png",
+        url: "/og-tires.png",
         width: 1200,
         height: 630,
-        alt: "OG Tires & Rims – Premium Tyres Catalogue",
+        alt: "OG Tires & Rims – Premium Tires Catalogue",
       },
     ],
     locale: "en_IN",
@@ -60,10 +60,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "OG Tires & Rims – Premium Tyres Catalogue",
+    title: "OG Tires & Rims – Premium Tires Catalogue",
     description:
-      "Browse premium tyres by category, brand, and size with OG Tires & Rims.",
-    images: ["/og-tyres.png"],
+      "Browse premium tires by category, brand, and size with OG Tires & Rims.",
+    images: ["/og-tires.png"],
   },
   icons: {
     icon: [

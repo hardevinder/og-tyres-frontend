@@ -7,19 +7,19 @@ const topPicks = [
   {
     name: "Compass SpeedEdge",
     size: "225/45R17",
-    image: "/tyres/tyre-1.jpg",
+    image: "/tires/tyre-1.jpg",
     badge: "BEST SELLER",
   },
   {
     name: "Compass TrailMaster AT",
     size: "265/65R17",
-    image: "/tyres/tyre-2.jpg",
+    image: "/tires/tyre-2.jpg",
     badge: "TOP PICK",
   },
   {
     name: "Compass WinterForce W",
     size: "205/55R16",
-    image: "/tyres/tyre-5.jpg",
+    image: "/tires/tyre-5.jpg",
     badge: "WINTER READY",
   },
 ];
@@ -117,10 +117,10 @@ export default function HomePage() {
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             {/* LEFT */}
             <div className="relative z-30 lg:col-span-7">
-              <GoldPill>OG Tyres Premium Collection</GoldPill>
+              <GoldPill>OG Tires Premium Collection</GoldPill>
 
               <h1 className="mt-5 max-w-4xl text-4xl font-extrabold leading-tight tracking-tight text-white md:text-6xl md:leading-[1.05]">
-                Premium tyres and rims crafted for{" "}
+                Premium tires and rims crafted for{" "}
                 <span className="bg-gradient-to-r from-[#f7c25a] via-[#ffd978] to-[#c98a1e] bg-clip-text text-transparent">
                   confident performance
                 </span>
@@ -128,7 +128,7 @@ export default function HomePage() {
               </h1>
 
               <p className="mt-6 max-w-2xl text-sm leading-7 text-white/68 md:text-base">
-                Welcome to OG Tyres & Rims — a premium destination for drivers
+                Welcome to OG Tires & Rims — a premium destination for drivers
                 who value quality, safety, and refined road presence. Our
                 catalogue is curated to help you discover the right balance of
                 comfort, grip, durability, and style for every journey.
@@ -161,7 +161,7 @@ export default function HomePage() {
                     10+
                   </div>
                   <div className="mt-2 text-sm text-white/58">
-                    Curated options from trusted tyre categories.
+                    Curated options from trusted tire categories.
                   </div>
                 </div>
 
@@ -217,7 +217,7 @@ export default function HomePage() {
                 <div className="relative mt-6 overflow-hidden rounded-[26px] border border-[#f7c25a]/14 bg-white">
                   <div className="flex h-72 items-center justify-center p-6 md:h-80">
                     <img
-                      src="/tyres/tyre-2.jpg"
+                      src="/tires/tyre-2.jpg"
                       alt="Top tyre"
                       className="h-full w-full object-contain drop-shadow-[0_18px_30px_rgba(0,0,0,0.22)]"
                     />
@@ -271,7 +271,7 @@ export default function HomePage() {
         <SectionHeading
           eyebrow="Explore Range"
           title="Shop by Category"
-          desc="Browse a refined tyre collection designed for daily comfort, dependable mileage, rugged road conditions, and performance-focused driving."
+          desc="Browse a refined tire collection designed for daily comfort, dependable mileage, rugged road conditions, and performance-focused driving."
           actionHref="/products"
           actionText="Explore all categories"
         />
@@ -309,7 +309,7 @@ export default function HomePage() {
       <section className="border-y border-[#f7c25a]/10 bg-gradient-to-b from-[#0a0a0a] to-[#080808]">
         <div className="mx-auto max-w-7xl px-4 py-16 md:px-6 md:py-20">
           <SectionHeading
-            eyebrow="Why OG Tyres"
+            eyebrow="Why OG tires"
             title="Built for trust, quality, and a premium buying experience"
             desc="Every section of our catalogue is designed to help customers explore with confidence, compare with clarity, and choose products that suit their driving needs."
           />
@@ -340,7 +340,7 @@ export default function HomePage() {
                 Professional Brand Image
               </div>
               <p className="mt-4 text-sm leading-7 text-white/65">
-                A luxury dark-and-gold identity gives OG Tyres & Rims a stronger,
+                A luxury dark-and-gold identity gives OG Tires & Rims a stronger,
                 more premium, and more memorable digital presence.
               </p>
             </div>
@@ -423,7 +423,7 @@ export default function HomePage() {
                   Need Assistance
                 </div>
                 <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-white">
-                  Looking for the right tyre for your vehicle?
+                  Looking for the right tire for your vehicle?
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-white/65 md:text-base">
                   Share your vehicle details with our team and receive guidance

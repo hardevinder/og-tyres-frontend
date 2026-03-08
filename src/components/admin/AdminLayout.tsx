@@ -61,7 +61,7 @@ export default function AdminLayout({
 
                 <span className="leading-tight">
                   <div className="bg-gradient-to-r from-[#f7c25a] via-[#f3d27d] to-[#d79b2b] bg-clip-text text-xl font-extrabold tracking-tight text-transparent sm:text-2xl">
-                    OG Tyres & Rims
+                    OG Tires & Rims
                   </div>
                   <div className="mt-0.5 text-xs font-medium tracking-wide text-[#f7c25a]/80">
                     Admin panel — manage catalogue & bookings
@@ -135,7 +135,7 @@ export default function AdminLayout({
 
           {/* Footer */}
           <footer className="border-t border-[#f7c25a]/10 bg-black/50 py-4 text-center text-xs font-medium tracking-wide text-[#f7c25a]/65">
-            © {new Date().getFullYear()} OG Tyres & Rims — Admin Bookings Dashboard
+            © {new Date().getFullYear()} OG Tires & Rims — Admin Bookings Dashboard
           </footer>
         </div>
       </div>

@@ -158,7 +158,7 @@ function formatPreferredTime(v?: string | null) {
 
 function resolveImage(url?: string | null) {
   const u = String(url || "").trim();
-  if (!u) return "/tyres/tyre-1.jpg";
+  if (!u) return "/tires/tyre-1.jpg";
   if (u.startsWith("http://") || u.startsWith("https://")) return u;
   if (u.startsWith("/")) return `${API.replace(/\/api$/, "")}${u}`;
   return `${API.replace(/\/api$/, "")}/${u}`;
@@ -419,7 +419,7 @@ export default function AdminBookingsPanel() {
                 Bookings Manager
               </h2>
               <p className="mt-1 text-sm text-white/70">
-                View booking requests, inspect booked tyres, and update order
+                View booking requests, inspect booked tires, and update order
                 status.
               </p>
             </div>

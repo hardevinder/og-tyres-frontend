@@ -25,15 +25,15 @@ export default function Footer() {
                 OG TIRES & RIMS
               </div>
               <div className="text-xs text-[#f7c25a]/80 uppercase tracking-widest">
-                Premium Tyres Catalogue
+                Premium Tires Catalogue
               </div>
             </div>
           </Link>
 
           <p className="text-sm mt-5 leading-7 text-white/60 max-w-sm">
-            Discover premium tyres and rims designed for durability,
+            Discover premium tires and rims designed for durability,
             performance, and comfort. Explore our catalogue and find the
-            perfect tyre for every road.
+            perfect tire for every road.
           </p>
 
           <div className="mt-6 rounded-xl border border-[#f7c25a]/20 bg-white/[0.03] px-4 py-3">
@@ -41,7 +41,7 @@ export default function Footer() {
               Premium Experience
             </div>
             <div className="text-sm text-white/60 mt-1">
-              A luxury tyre catalogue experience.
+              A luxury tire catalogue experience.
             </div>
           </div>
         </div>
@@ -126,10 +126,10 @@ export default function Footer() {
 
             <li>
               <a
-                href="tel:+916047123870"
+                href="tel:+16047123870"
                 className="text-[#f7c25a] hover:text-[#ffd978] transition"
               >
-                +91 60471 23870
+                +1 60471 23870
               </a>
             </li>
 
@@ -138,7 +138,7 @@ export default function Footer() {
             </li>
 
             <li className="text-xs text-white/40 max-w-xs">
-              Premium tyre catalogue interface designed for a luxury browsing
+              Premium tire catalogue interface designed for a luxury browsing
               experience.
             </li>
 

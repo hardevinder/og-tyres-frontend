@@ -32,7 +32,7 @@ function safeNumber(v: any, fallback = 1) {
 
 function normalizeImage(url: string) {
   const u = String(url || "").trim();
-  if (!u) return "/tyres/tyre-1.jpg";
+  if (!u) return "/tires/tyre-1.jpg";
   if (u.startsWith("http://") || u.startsWith("https://")) return u;
   if (u.startsWith("/")) return u;
   return `/${u}`;
@@ -307,7 +307,7 @@ export default function BookPageClient() {
                   Your booking request has been received
                 </h1>
                 <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-                  Thank you for choosing OG Tyres. Our team will review your
+                  Thank you for choosing OG Tires. Our team will review your
                   request and connect with you soon regarding availability,
                   confirmation, and fitment details.
                 </p>

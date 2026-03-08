@@ -19,19 +19,19 @@ export default function ContactPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-4 py-1 text-xs font-semibold text-[#f7c25a]">
                 <span className="h-2 w-2 rounded-full bg-[#f7c25a]" />
-                Contact • OG Tyres & Rims
+                Contact • OG Tires & Rims
               </div>
 
               <h1 className="mt-5 text-4xl font-extrabold tracking-tight md:text-5xl">
                 Get in touch with{" "}
                 <span className="bg-gradient-to-r from-[#f7c25a] to-[#d79b2b] bg-clip-text text-transparent">
-                  OG Tyres & Rims
+                  OG Tires & Rims
                 </span>
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-white/70">
-                Looking for the right tyre for your vehicle? Contact our team for
-                guidance on tyre sizes, fitment options, and product availability.
+                Looking for the right tire for your vehicle? Contact our team for
+                guidance on tire sizes, fitment options, and product availability.
                 We are happy to help you choose the best option for your driving
                 needs.
               </p>
@@ -74,7 +74,7 @@ export default function ContactPage() {
                 </a>
 
                 <p className="mt-2 text-sm text-white/70">
-                  Call us for product availability, tyre size guidance,
+                  Call us for product availability,tire size guidance,
                   and purchase assistance.
                 </p>
 
@@ -104,7 +104,7 @@ export default function ContactPage() {
                 </div>
 
                 <p className="mt-2 text-sm text-white/70">
-                  Send us your tyre requirement and vehicle details. Our team
+                  Send us your tire requirement and vehicle details. Our team
                   will guide you with the best available options.
                 </p>
 
@@ -138,7 +138,7 @@ export default function ContactPage() {
 
               <p className="mt-2 text-sm text-white/70">
                 Our team is available during business hours to assist customers
-                with tyre selection, fitment information, and purchase inquiries.
+                with tire selection, fitment information, and purchase inquiries.
               </p>
             </div>
 
@@ -148,9 +148,9 @@ export default function ContactPage() {
 
         {/* EXTRA TEXT */}
         <div className="mt-10 max-w-3xl text-sm leading-7 text-white/65">
-          OG Tyres & Rims is committed to providing customers with reliable tyre
+          OG Tires & Rims is committed to providing customers with reliable tire
           options suited for everyday driving as well as performance needs.
-          Whether you are searching for a specific tyre size or exploring
+          Whether you are searching for a specific tire size or exploring
           different categories, our team is ready to guide you toward the best
           choice for your vehicle.
         </div>

@@ -20,7 +20,7 @@ export default function CheckoutPage() {
         <h1 className="text-2xl font-semibold">Checkout</h1>
         <p className="mt-6 opacity-80">Cart is empty.</p>
         <Link href="/products" className="mt-4 inline-block rounded-lg border px-4 py-2">
-          Browse tyres
+          Browse tires
         </Link>
       </div>
     );

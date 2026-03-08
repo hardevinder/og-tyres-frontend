@@ -70,7 +70,7 @@ export default function CartPage() {
                 href="/products"
                 className="rounded-2xl bg-[#f7c25a] px-5 py-3 text-sm font-extrabold text-black hover:brightness-110 transition"
               >
-                Browse Tyres
+                Browse Tires
               </Link>
             )}
           </div>
@@ -83,7 +83,7 @@ export default function CartPage() {
           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 md:p-10">
             <div className="text-xl font-extrabold text-white">Cart is empty</div>
             <div className="mt-2 text-sm text-white/80">
-              Add tyres from the catalogue and they’ll show up here.
+              Add tires from the catalogue and they’ll show up here.
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">

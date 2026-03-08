@@ -13,7 +13,7 @@ export default function AddToCartButton({ product }: { product: any }) {
           name: product.name,
           price: Number(product.price),
           image: product.image,
-          variant: product.size, // optional for tyres
+          variant: product.size, // optional for tires
         })
       }
       className="rounded-lg border border-white/10 bg-white/10 px-4 py-2 hover:bg-white/15"

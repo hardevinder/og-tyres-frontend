@@ -68,7 +68,7 @@ function catLabel(cat?: string) {
 
 function catDesc(cat?: string) {
   const found = categories.find((c) => c.value === cat);
-  return found?.desc || "Browse our premium tyre collection.";
+  return found?.desc || "Browse our premium tire collection.";
 }
 
 /* =========================
@@ -93,11 +93,11 @@ function normalizeSize(row: any) {
 }
 
 function normalizeBrand(row: any) {
-  const raw = String(row?.brand ?? row?.make ?? "OG Tyres").trim();
+  const raw = String(row?.brand ?? row?.make ?? "OG Tires").trim();
   const lower = raw.toLowerCase();
 
-  if (lower === "og tyers") return "OG Tyres";
-  if (lower === "og tyre") return "OG Tyres";
+  if (lower === "og tires") return "OG Tires";
+  if (lower === "og tire") return "OG Tires";
   return raw;
 }
 
@@ -203,7 +203,7 @@ function guessBadge(row: any): string | undefined {
 function resolveImg(url: any) {
   const u = String(url || "").trim();
 
-  if (!u) return "/tyres/tyre-1.jpg";
+  if (!u) return "/tires/tyre-1.jpg";
   if (u.startsWith("http://") || u.startsWith("https://")) return u;
   if (u.startsWith("//")) return `https:${u}`;
   if (u.startsWith("/")) return `${API_ROOT}${u}`;
@@ -213,7 +213,7 @@ function resolveImg(url: any) {
 
 function normalizeTyre(row: ApiTyre): Product {
   const id = toId(row?.id ?? row?.uuid ?? row?.slug ?? row?.sku);
-  const name = String(row?.name ?? row?.title ?? "Tyre").trim();
+  const name = String(row?.name ?? row?.title ?? "Tire").trim();
   const brand = normalizeBrand(row);
 
   const priceRaw = row?.price ?? row?.sale_price ?? row?.mrp ?? row?.amount ?? 0;
@@ -290,7 +290,7 @@ export default function ProductsPage() {
       setErr(null);
 
       try {
-        const endpoints = [`${API}/tyres`, `${API}/products`];
+        const endpoints = [`${API}/tires`, `${API}/products`];
 
         let data: any = null;
         let lastError: any = null;
@@ -382,7 +382,7 @@ export default function ProductsPage() {
   const activeCategoryLabel = activeCat === "all" ? "All Categories" : catLabel(activeCat);
   const activeCategoryDesc =
     activeCat === "all"
-      ? "Browse premium tyres across every driving condition and vehicle need."
+      ? "Browse premium tires across every driving condition and vehicle need."
       : catDesc(activeCat);
 
   return (
@@ -397,17 +397,17 @@ export default function ProductsPage() {
         <div className="relative mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
           <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
-              <GoldPill>OG Tyres Premium Catalogue</GoldPill>
+              <GoldPill>OG Tires Premium Catalogue</GoldPill>
 
               <h1 className="mt-5 max-w-4xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
                 Explore the right{" "}
                 <span className="bg-gradient-to-r from-[#f7c25a] via-[#f2d07f] to-[#d79b2b] bg-clip-text text-transparent">
-                  tyres for your drive
+                  tires for your drive
                 </span>
               </h1>
 
               <p className="mt-5 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-                Browse premium tyre options, compare fitment-friendly sizes, and continue with either a
+                Browse premium tire options, compare fitment-friendly sizes, and continue with either a
                 quote request or a direct booking request. Designed for a smoother buying journey.
                 {loading ? " Loading from live API..." : ""}
               </p>
@@ -417,7 +417,7 @@ export default function ProductsPage() {
                   <div className="font-extrabold">API Error</div>
                   <div className="mt-1 opacity-90 break-all">
                     {err} — please verify backend, CORS, SSL, or route:
-                    <span className="ml-1 font-semibold">{API}/tyres</span>
+                    <span className="ml-1 font-semibold">{API}/tires</span>
                   </div>
                 </div>
               ) : null}
@@ -485,7 +485,7 @@ export default function ProductsPage() {
                       Category
                     </div>
                     <div className="mt-1 text-sm font-extrabold text-white">
-                      {activeCat === "all" ? "All Tyres" : catLabel(activeCat)}
+                      {activeCat === "all" ? "All Tires" : catLabel(activeCat)}
                     </div>
                   </div>
                   <span className="rounded-full bg-[#f7c25a]/10 px-3 py-1 text-xs font-bold text-[#f7c25a]">
@@ -554,10 +554,10 @@ export default function ProductsPage() {
               Catalogue
             </div>
             <h2 className="mt-2 text-2xl font-black tracking-tight md:text-3xl">
-              Premium Tyre Collection
+              Premium Tire Collection
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">
-              Select the tyre that fits your requirement and continue with a quote request or move
+              Select the tire that fits your requirement and continue with a quote request or move
               directly to the booking form.
             </p>
           </div>
@@ -599,7 +599,7 @@ export default function ProductsPage() {
             </div>
             <h3 className="mt-5 text-2xl font-black text-white">No products found</h3>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/70">
-              Try clearing your filters or search for another tyre size, brand, or category.
+              Try clearing your filters or search for another tire size, brand, or category.
             </p>
             <button
               onClick={() => {
@@ -698,11 +698,11 @@ export default function ProductsPage() {
             <div>
               <GoldPill>Need Assistance?</GoldPill>
               <h3 className="mt-4 text-3xl font-black tracking-tight text-white">
-                Not sure which tyre fits your vehicle?
+                Not sure which tire fits your vehicle?
               </h3>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
                 Share your vehicle details with our team and get support for fitment, availability,
-                and the right tyre recommendation before you place your request.
+                and the right tire recommendation before you place your request.
               </p>
             </div>
 

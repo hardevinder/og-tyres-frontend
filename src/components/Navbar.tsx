@@ -139,7 +139,7 @@ export default function Navbar() {
             <a
               href={PHONE_HREF}
               className="inline-flex items-center justify-center rounded-xl border border-[#f7c25a]/20 bg-white/[0.04] p-2.5 text-white transition hover:bg-white/[0.08]"
-              aria-label="Call OG Tyres"
+              aria-label="Call OG Tires"
             >
               <PhoneCall className="h-5 w-5 text-[#f7c25a]" />
             </a>
@@ -187,7 +187,7 @@ export default function Navbar() {
                   <Search className="h-4 w-4 text-[#f7c25a]" />
                   <input
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40"
-                    placeholder="Search tyre size or brand..."
+                    placeholder="Search tire size or brand..."
                   />
                 </div>
 
@@ -232,7 +232,7 @@ export default function Navbar() {
                     Customer Assistance
                   </div>
                   <p className="mt-2 text-sm leading-6 text-white/65">
-                    Contact us for tyre size guidance, fitment support, product
+                    Contact us for tire size guidance, fitment support, product
                     availability, and help choosing the right option for your
                     vehicle.
                   </p>
