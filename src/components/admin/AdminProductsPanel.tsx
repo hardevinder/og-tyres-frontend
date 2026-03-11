@@ -66,6 +66,7 @@ function normalizeArrayResponse<T = any>(json: any): T[] {
   if (!json) return [];
   if (Array.isArray(json)) return json as T[];
   if (Array.isArray(json.data)) return json.data as T[];
+  if (Array.isArray(json.tyres)) return json.tyres as T[];
   if (Array.isArray(json.tires)) return json.tires as T[];
   if (Array.isArray(json.categories)) return json.categories as T[];
   return [];
@@ -118,7 +119,7 @@ async function uploadTyreImage(tyreId: number, file: File) {
   const fd = new FormData();
   fd.append("file", file, file.name);
 
-  const res = await fetch(`${API}/tires/${tyreId}/image`, {
+  const res = await fetch(`${API}/tyres/${tyreId}/image`, {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: fd,
@@ -223,7 +224,7 @@ export default function AdminProductsPanel() {
     setLoading(true);
     setError(null);
     try {
-      const json = await apiFetch("/tires");
+      const json = await apiFetch("/tyres");
       setTires(normalizeArrayResponse<Tyre>(json));
     } catch (err: any) {
       console.error(err);
@@ -258,7 +259,7 @@ export default function AdminProductsPanel() {
         active: newActive,
       };
 
-      const createdResp = await apiFetch("/tires", {
+      const createdResp = await apiFetch("/tyres", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -312,7 +313,7 @@ export default function AdminProductsPanel() {
   async function handleDelete(id: number) {
     if (!confirm("Delete tyre?")) return;
     try {
-      await apiFetch(`/tires/${id}`, { method: "DELETE" });
+      await apiFetch(`/tyres/${id}`, { method: "DELETE" });
       setTires((s) => s.filter((t) => t.id !== id));
       showToast("success", "Tyre deleted");
     } catch (err: any) {
@@ -369,7 +370,7 @@ export default function AdminProductsPanel() {
       // optional: remove image (sets image_url null)
       if (eRemoveImage) payload.image_url = null;
 
-      const json = await apiFetch(`/tires/${editingTyre.id}`, {
+      const json = await apiFetch(`/tyres/${editingTyre.id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
@@ -503,7 +504,6 @@ export default function AdminProductsPanel() {
                       }
                       className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#f7c25a]/60 focus:ring-2 focus:ring-[#f7c25a]/20"
                     >
-                      {/* ✅ FIX: option bg + text */}
                       <option
                         value=""
                         className="bg-[#0b0b0b] text-white"
@@ -594,7 +594,6 @@ export default function AdminProductsPanel() {
                     />
                   </div>
 
-                  {/* ✅ Upload image instead of URL */}
                   <div>
                     <label className="text-xs font-semibold text-white/70">
                       Image (upload)
@@ -721,7 +720,6 @@ export default function AdminProductsPanel() {
                             </td>
                             <td className="p-3 align-top">
                               {img ? (
-                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                   src={img}
                                   alt={t.name}
@@ -827,7 +825,6 @@ export default function AdminProductsPanel() {
                         }
                         className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#f7c25a]/60"
                       >
-                        {/* ✅ FIX: option bg + text */}
                         <option
                           value=""
                           className="bg-[#0b0b0b] text-white"
@@ -913,7 +910,6 @@ export default function AdminProductsPanel() {
                       />
                     </div>
 
-                    {/* ✅ Upload new image */}
                     <div>
                       <label className="text-xs font-semibold text-white/70">
                         Upload new image
@@ -1034,7 +1030,6 @@ export default function AdminProductsPanel() {
                   </button>
                 </div>
                 <div className="w-full h-[65vh] flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imagePreviewUrl}
                     alt="Preview"

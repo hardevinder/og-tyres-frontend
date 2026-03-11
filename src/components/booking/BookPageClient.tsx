@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 /* =========================
    API base helper
@@ -44,6 +44,17 @@ function todayStr() {
   const m = `${d.getMonth() + 1}`.padStart(2, "0");
   const day = `${d.getDate()}`.padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+function getToken() {
+  if (typeof window === "undefined") return "";
+
+  return (
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("accessToken") ||
+    ""
+  );
 }
 
 function GoldPill({ children }: { children: React.ReactNode }) {
@@ -137,22 +148,18 @@ function Select(
 
 export default function BookPageClient() {
   const sp = useSearchParams();
+  const router = useRouter();
 
-  const tyreId = sp.get("tyreId") || "";
+  const tyreId = sp.get("tyreId") || sp.get("tireId") || sp.get("id") || "";
   const product = sp.get("product") || "Selected Tyre";
   const size = sp.get("size") || "—";
   const category = sp.get("category") || "";
   const image = normalizeImage(sp.get("image") || "");
   const initialQty = safeNumber(sp.get("qty") || 1, 1);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const [form, setForm] = useState({
-    customer_name: "",
-    phone: "",
-    email: "",
-    city: "",
-    address_line: "",
-    landmark: "",
-    pincode: "",
     vehicle_make_model: "",
     vehicle_year: "",
     preferred_date: "",
@@ -162,23 +169,34 @@ export default function BookPageClient() {
   });
 
   const [fieldErrors, setFieldErrors] = useState<{
-    customer_name?: string;
-    phone?: string;
     qty?: string;
   }>({});
 
   const [submitting, setSubmitting] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<any>(null);
 
+  useEffect(() => {
+    const token = getToken();
+
+    if (!token) {
+      const current =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "/book";
+
+      router.replace(`/login?redirect=${encodeURIComponent(current)}`);
+      return;
+    }
+
+    setIsLoggedIn(true);
+    setCheckingAuth(false);
+  }, [router]);
+
   const canSubmit = useMemo(() => {
-    return (
-      String(tyreId).trim() &&
-      form.customer_name.trim().length >= 2 &&
-      form.phone.trim().length >= 6 &&
-      Number(form.qty) >= 1
-    );
-  }, [form, tyreId]);
+    return String(tyreId).trim() && Number(form.qty) >= 1 && isLoggedIn;
+  }, [form.qty, tyreId, isLoggedIn]);
 
   function update<K extends keyof typeof form>(
     key: K,
@@ -188,8 +206,6 @@ export default function BookPageClient() {
 
     setFieldErrors((prev) => {
       const next = { ...prev };
-      if (key === "customer_name") delete next.customer_name;
-      if (key === "phone") delete next.phone;
       if (key === "qty") delete next.qty;
       return next;
     });
@@ -197,8 +213,6 @@ export default function BookPageClient() {
 
   function validateForm() {
     const nextErrors: {
-      customer_name?: string;
-      phone?: string;
       qty?: string;
     } = {};
 
@@ -207,16 +221,9 @@ export default function BookPageClient() {
       return false;
     }
 
-    if (!form.customer_name.trim()) {
-      nextErrors.customer_name = "Customer name is required.";
-    } else if (form.customer_name.trim().length < 2) {
-      nextErrors.customer_name = "Please enter a valid customer name.";
-    }
-
-    if (!form.phone.trim()) {
-      nextErrors.phone = "Phone number is required.";
-    } else if (form.phone.trim().length < 6) {
-      nextErrors.phone = "Please enter a valid phone number.";
+    if (!getToken()) {
+      setError("Please login first to continue with booking.");
+      return false;
     }
 
     if (!Number(form.qty) || Number(form.qty) < 1) {
@@ -239,14 +246,9 @@ export default function BookPageClient() {
 
     if (!validateForm()) return;
 
+    const token = getToken();
+
     const payload = {
-      customer_name: form.customer_name.trim(),
-      phone: form.phone.trim(),
-      email: form.email.trim() || undefined,
-      city: form.city.trim() || undefined,
-      address_line: form.address_line.trim() || undefined,
-      landmark: form.landmark.trim() || undefined,
-      pincode: form.pincode.trim() || undefined,
       vehicle_make_model: form.vehicle_make_model.trim() || undefined,
       vehicle_year: form.vehicle_year.trim() || undefined,
       preferred_date: form.preferred_date || undefined,
@@ -267,6 +269,7 @@ export default function BookPageClient() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -274,6 +277,21 @@ export default function BookPageClient() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        if (res.status === 401) {
+          const current =
+            typeof window !== "undefined"
+              ? window.location.pathname + window.location.search
+              : "/book";
+          router.replace(`/login?redirect=${encodeURIComponent(current)}`);
+          return;
+        }
+
+        if (res.status === 400) {
+          throw new Error(
+            data?.message || "Please complete your address before booking."
+          );
+        }
+
         throw new Error(data?.message || `HTTP ${res.status}`);
       }
 
@@ -284,6 +302,25 @@ export default function BookPageClient() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (checkingAuth) {
+    return (
+      <main className="min-h-screen bg-[#050505] text-white">
+        <section className="relative overflow-hidden border-b border-white/10">
+          <div className="absolute inset-0 bg-[radial-gradient(1000px_540px_at_18%_15%,rgba(247,194,90,0.20),transparent_60%),radial-gradient(800px_500px_at_85%_15%,rgba(247,194,90,0.10),transparent_60%)]" />
+          <div className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:56px_56px]" />
+
+          <div className="relative mx-auto max-w-4xl px-4 py-20 md:px-6">
+            <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-8 text-center shadow-2xl backdrop-blur-xl">
+              <div className="text-sm font-semibold text-white/75">
+                Redirecting to login...
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   if (success) {
@@ -384,9 +421,8 @@ export default function BookPageClient() {
               </h1>
 
               <p className="mt-4 text-sm leading-7 text-white/75 md:text-base">
-                Review your selected tyre, fill in your vehicle and contact
-                details, and submit your booking request. Our team will follow
-                up with confirmation and assistance.
+                Review your selected tyre, confirm quantity, add vehicle and
+                schedule details, and submit your booking request.
               </p>
 
               <div className="mt-6 rounded-[28px] border border-white/10 bg-black/25 p-4">
@@ -429,8 +465,8 @@ export default function BookPageClient() {
                   </div>
 
                   <div className="mt-4 rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/8 px-4 py-3 text-sm text-[#f7c25a]">
-                    Please confirm quantity and share your preferred schedule
-                    for quicker follow-up.
+                    Address and contact details will be taken automatically from
+                    your account profile.
                   </div>
                 </div>
               </div>
@@ -439,10 +475,10 @@ export default function BookPageClient() {
             <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl md:p-6">
               <div className="mb-6">
                 <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
-                  Customer Details
+                  Booking Details
                 </div>
                 <h2 className="mt-2 text-2xl font-black tracking-tight md:text-3xl">
-                  Tell us where and how to reach you
+                  Confirm quantity and schedule
                 </h2>
               </div>
 
@@ -460,81 +496,6 @@ export default function BookPageClient() {
               ) : null}
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-5 md:grid-cols-2">
-                  <Field
-                    label="Customer Name"
-                    required
-                    error={fieldErrors.customer_name}
-                  >
-                    <Input
-                      value={form.customer_name}
-                      onChange={(e) =>
-                        update("customer_name", e.target.value)
-                      }
-                      placeholder="Enter your full name"
-                      hasError={!!fieldErrors.customer_name}
-                    />
-                  </Field>
-
-                  <Field
-                    label="Phone Number"
-                    required
-                    error={fieldErrors.phone}
-                  >
-                    <Input
-                      value={form.phone}
-                      onChange={(e) => update("phone", e.target.value)}
-                      placeholder="Enter your phone number"
-                      hasError={!!fieldErrors.phone}
-                    />
-                  </Field>
-                </div>
-
-                <div className="grid gap-5 md:grid-cols-2">
-                  <Field label="Email Address">
-                    <Input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => update("email", e.target.value)}
-                      placeholder="Enter your email"
-                    />
-                  </Field>
-
-                  <Field label="City">
-                    <Input
-                      value={form.city}
-                      onChange={(e) => update("city", e.target.value)}
-                      placeholder="Enter your city"
-                    />
-                  </Field>
-                </div>
-
-                <Field label="Address Line">
-                  <Input
-                    value={form.address_line}
-                    onChange={(e) => update("address_line", e.target.value)}
-                    placeholder="House no, street, area"
-                  />
-                </Field>
-
-                <div className="grid gap-5 md:grid-cols-2">
-                  <Field label="Landmark">
-                    <Input
-                      value={form.landmark}
-                      onChange={(e) => update("landmark", e.target.value)}
-                      placeholder="Near school, market, chowk..."
-                    />
-                  </Field>
-
-                  <Field label="Pincode">
-                    <Input
-                      value={form.pincode}
-                      onChange={(e) => update("pincode", e.target.value)}
-                      placeholder="Enter pincode"
-                    />
-                  </Field>
-                </div>
-
                 <div className="grid gap-5 md:grid-cols-2">
                   <Field label="Vehicle Make / Model">
                     <Input
@@ -635,7 +596,7 @@ export default function BookPageClient() {
                 <div className="flex flex-wrap gap-3 pt-2">
                   <button
                     type="submit"
-                    disabled={submitting || !tyreId}
+                    disabled={submitting || !tyreId || !canSubmit}
                     className="inline-flex min-w-[220px] items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {submitting ? "Booking..." : "Book Now"}

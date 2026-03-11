@@ -243,7 +243,7 @@ select {
 button {
   cursor: pointer;
   border: 0;
-  background: transparent;
+  color: inherit;
 }
 
 input,
@@ -325,12 +325,20 @@ body.has-fixed-navbar.navbar-scrolled main {
 /* 🧱 Utility Surfaces */
 /* -------------------------------------------- */
 .surface-dark {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.02)
+  );
   border: 1px solid var(--border);
 }
 
 .surface-gold {
-  background: linear-gradient(180deg, rgba(247, 194, 90, 0.12), rgba(247, 194, 90, 0.04));
+  background: linear-gradient(
+    180deg,
+    rgba(247, 194, 90, 0.12),
+    rgba(247, 194, 90, 0.04)
+  );
   border: 1px solid rgba(247, 194, 90, 0.18);
 }
 
