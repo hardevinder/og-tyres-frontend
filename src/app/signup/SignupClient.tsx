@@ -50,13 +50,11 @@ export default function SignupClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const redirectTo = useMemo(
-    () =>
-      sanitizeRedirect(
-        searchParams?.get("redirect") || searchParams?.get("redirectTo")
-      ),
-    [searchParams]
-  );
+  const redirectTo = useMemo(() => {
+    return sanitizeRedirect(
+      searchParams.get("redirect") || searchParams.get("redirectTo")
+    );
+  }, [searchParams]);
 
   const [form, setForm] = useState({
     name: "",
@@ -98,7 +96,7 @@ export default function SignupClient() {
     }
 
     if (!form.address_line1.trim()) {
-      setError("Address line is required");
+      setError("Address line 1 is required");
       return false;
     }
 
@@ -120,13 +118,14 @@ export default function SignupClient() {
     return true;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
     if (!validate()) return;
 
     setLoading(true);
+
     try {
       const registerUrl = API ? `${API}/auth/register` : "/api/auth/register";
 
@@ -155,6 +154,7 @@ export default function SignupClient() {
       }
 
       const token = data?.token || data?.accessToken;
+
       if (!token) {
         throw new Error("No token received");
       }
@@ -188,12 +188,12 @@ export default function SignupClient() {
             transition={{ duration: 0.28 }}
             className="w-full max-w-2xl"
           >
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 shadow-[0_30px_80px_rgba(0,0,0,0.55)] backdrop-blur">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.55)] backdrop-blur md:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <GoldPill>OG Gold Edition</GoldPill>
 
-                  <h1 className="mt-3 text-2xl md:text-3xl font-extrabold tracking-tight">
+                  <h1 className="mt-3 text-2xl font-extrabold tracking-tight md:text-3xl">
                     Create your account
                   </h1>
 
@@ -289,6 +289,7 @@ export default function SignupClient() {
                         }
                         placeholder="••••••••"
                         required
+                        autoComplete="new-password"
                       />
                       <button
                         type="button"
@@ -385,7 +386,7 @@ export default function SignupClient() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group relative w-full overflow-hidden rounded-2xl border border-[#f7c25a]/40 bg-black/40 px-5 py-3 text-sm font-extrabold text-[#f7c25a] backdrop-blur transition-all duration-300 hover:border-[#f7c25a] hover:shadow-[0_0_25px_rgba(247,194,90,0.35)] disabled:opacity-60"
+                  className="group relative w-full overflow-hidden rounded-2xl border border-[#f7c25a]/40 bg-black/40 px-5 py-3 text-sm font-extrabold text-[#f7c25a] backdrop-blur transition-all duration-300 hover:border-[#f7c25a] hover:shadow-[0_0_25px_rgba(247,194,90,0.35)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-[#f7c25a]/30 to-transparent transition-transform duration-700 group-hover:translate-x-[100%]" />
                   <span className="relative z-10 tracking-wide">
