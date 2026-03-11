@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ShoppingCart, ArrowRight } from "lucide-react";
 
 /* =========================
    API base helper
@@ -41,6 +42,18 @@ type Product = {
   category?: string;
   brand?: string;
   hasPrice?: boolean;
+  price?: number;
+};
+
+type CartItem = {
+  id: string;
+  name: string;
+  brand?: string;
+  size: string;
+  image: string;
+  category?: string;
+  price?: number;
+  qty: number;
 };
 
 const categories = [
@@ -207,7 +220,8 @@ function normalizeTyre(row: ApiTyre): Product {
 
   const priceRaw =
     row?.price ?? row?.sale_price ?? row?.mrp ?? row?.amount ?? 0;
-  const hasPrice = Number(priceRaw) > 0;
+  const price = Number(priceRaw) > 0 ? Number(priceRaw) : 0;
+  const hasPrice = price > 0;
 
   return {
     id,
@@ -218,6 +232,7 @@ function normalizeTyre(row: ApiTyre): Product {
     badge,
     image,
     hasPrice,
+    price,
   };
 }
 
@@ -253,6 +268,116 @@ function getToken() {
   );
 }
 
+function getCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("og_cart");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCart(items: CartItem[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("og_cart", JSON.stringify(items));
+  window.dispatchEvent(new Event("cart-updated"));
+}
+
+function addToCart(product: Product) {
+  const cart = getCart();
+  const existingIndex = cart.findIndex((item) => item.id === product.id);
+
+  if (existingIndex >= 0) {
+    cart[existingIndex].qty += 1;
+  } else {
+    cart.push({
+      id: product.id,
+      name: product.name,
+      brand: product.brand,
+      size: product.size,
+      image: product.image,
+      category: product.category,
+      price: product.price || 0,
+      qty: 1,
+    });
+  }
+
+  saveCart(cart);
+  return cart;
+}
+
+function getCartCount() {
+  return getCart().reduce((sum, item) => sum + Number(item.qty || 0), 0);
+}
+
+function getCartSubtotal() {
+  return getCart().reduce((sum, item) => {
+    const price = Number(item.price || 0);
+    const qty = Number(item.qty || 0);
+    return sum + price * qty;
+  }, 0);
+}
+
+function formatPrice(n: number) {
+  try {
+    return n.toLocaleString("en-IN");
+  } catch {
+    return String(n);
+  }
+}
+
+function FloatingCartButton({
+  cartCount,
+  subtotal,
+}: {
+  cartCount: number;
+  subtotal: number;
+}) {
+  if (cartCount <= 0) return null;
+
+  return (
+    <Link
+      href="/cart"
+      className="group fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-[330px] sm:bottom-5 sm:right-5 sm:w-auto"
+      aria-label="Open cart"
+    >
+      <div className="relative overflow-hidden rounded-2xl border border-[#f7c25a]/30 bg-black/85 px-4 py-3 text-white shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-all duration-300 group-hover:-translate-y-0.5 group-hover:border-[#f7c25a]/55 group-hover:shadow-[0_24px_60px_rgba(0,0,0,0.55)] sm:rounded-3xl sm:px-5 sm:py-3.5">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(247,194,90,0.16),transparent_35%,transparent_100%)] opacity-80" />
+
+        <div className="relative flex items-center gap-3">
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/12">
+            <ShoppingCart className="h-5 w-5 text-[#f7c25a]" />
+            <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-[#f7c25a] px-1.5 py-0.5 text-[10px] font-black text-black shadow-lg">
+              {cartCount}
+            </span>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/50">
+              Your Cart
+            </div>
+            <div className="mt-0.5 flex items-center gap-2">
+              <span className="truncate text-sm font-black text-white sm:text-base">
+                {subtotal > 0 ? `₹ ${formatPrice(subtotal)}` : `${cartCount} item${cartCount > 1 ? "s" : ""}`}
+              </span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/70">
+                {cartCount} item{cartCount > 1 ? "s" : ""}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/80 transition group-hover:bg-white/10 group-hover:text-white">
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function ProductsPage() {
   const sp = useSearchParams();
   const router = useRouter();
@@ -262,6 +387,23 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [cartCount, setCartCount] = useState(0);
+  const [cartSubtotal, setCartSubtotal] = useState(0);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    const refreshCart = () => {
+      setCartCount(getCartCount());
+      setCartSubtotal(getCartSubtotal());
+    };
+
+    refreshCart();
+    window.addEventListener("cart-updated", refreshCart);
+
+    return () => {
+      window.removeEventListener("cart-updated", refreshCart);
+    };
+  }, []);
 
   useEffect(() => {
     if (catFromUrl && catFromUrl !== activeCat) {
@@ -336,6 +478,12 @@ export default function ProductsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   const filtered = useMemo(() => {
     let list = [...products];
 
@@ -358,11 +506,24 @@ export default function ProductsPage() {
     router.push(`/login?redirect=${encodeURIComponent(bookingHref)}`);
   }
 
+  function handleAddToCart(p: Product) {
+    addToCart(p);
+    setCartCount(getCartCount());
+    setCartSubtotal(getCartSubtotal());
+    setToast(`${p.brand ? `${p.brand} ` : ""}${p.name} added to cart`);
+  }
+
   const pageTitle =
     activeCat === "all" ? "All Tires" : `${catLabel(activeCat)} Tires`;
 
   return (
-    <main className="min-h-screen bg-[#070707] text-white">
+    <main className="min-h-screen bg-[#070707] pb-28 text-white sm:pb-24">
+      {toast ? (
+        <div className="fixed right-4 top-4 z-50 rounded-2xl border border-green-400/30 bg-green-500/15 px-4 py-3 text-sm font-semibold text-green-200 shadow-lg backdrop-blur">
+          {toast}
+        </div>
+      ) : null}
+
       <section className="border-b border-white/10">
         <div className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-16">
           <div className="max-w-4xl">
@@ -375,8 +536,8 @@ export default function ProductsPage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/65 md:text-base">
-              Browse available tires by category and continue with a quote
-              request or booking request.
+              Browse available tires by category and continue with a quote,
+              booking, or add items to cart.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -385,6 +546,13 @@ export default function ProductsPage() {
                 className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
               >
                 ← Back to Categories
+              </Link>
+
+              <Link
+                href="/cart"
+                className="inline-flex items-center justify-center rounded-2xl border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-5 py-3 text-sm font-extrabold text-[#f7c25a] transition hover:bg-[#f7c25a]/15"
+              >
+                Cart ({cartCount})
               </Link>
 
               <Link
@@ -405,7 +573,27 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-6 md:pb-20">
+      <section className="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 md:pb-20">
+        <div className="mb-8 flex flex-wrap gap-3">
+          {categories.map((cat) => {
+            const active = activeCat === cat.value;
+            return (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => setActiveCat(cat.value)}
+                className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                  active
+                    ? "border border-[#f7c25a]/40 bg-[#f7c25a] text-black"
+                    : "border border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+                }`}
+              >
+                {cat.title}
+              </button>
+            );
+          })}
+        </div>
+
         {loading ? (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -417,7 +605,8 @@ export default function ProductsPage() {
                 <div className="mt-4 h-6 w-40 rounded bg-white/10" />
                 <div className="mt-2 h-4 w-28 rounded bg-white/10" />
                 <div className="mt-2 h-4 w-24 rounded bg-white/10" />
-                <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="mt-5 grid grid-cols-1 gap-3">
+                  <div className="h-11 rounded-xl bg-white/10" />
                   <div className="h-11 rounded-xl bg-white/10" />
                   <div className="h-11 rounded-xl bg-white/10" />
                 </div>
@@ -478,27 +667,47 @@ export default function ProductsPage() {
 
                     <p className="mt-2 text-sm text-white/65">Size: {p.size}</p>
 
+                    {p.hasPrice ? (
+                      <p className="mt-2 text-sm font-bold text-[#f7c25a]">
+                        ₹ {formatPrice(Number(p.price || 0))}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-sm font-medium text-white/50">
+                        Price on request
+                      </p>
+                    )}
+
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-medium text-white/75">
                         Category: {catLabel(p.category)}
                       </span>
                     </div>
 
-                    <div className="mt-5 grid grid-cols-2 gap-3">
-                      <Link
-                        href={inquiryHref}
-                        className="inline-flex items-center justify-center rounded-xl bg-[#f7c25a] px-4 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
-                      >
-                        Get Quote
-                      </Link>
-
+                    <div className="mt-5 grid grid-cols-1 gap-3">
                       <button
                         type="button"
-                        onClick={() => handleBookNow(p)}
-                        className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
+                        onClick={() => handleAddToCart(p)}
+                        className="inline-flex items-center justify-center rounded-xl bg-[#f7c25a] px-4 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
                       >
-                        Book Now
+                        Add to Cart
                       </button>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <Link
+                          href={inquiryHref}
+                          className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
+                        >
+                          Get Quote
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() => handleBookNow(p)}
+                          className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
+                        >
+                          Book Now
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -507,6 +716,8 @@ export default function ProductsPage() {
           </div>
         )}
       </section>
+
+      <FloatingCartButton cartCount={cartCount} subtotal={cartSubtotal} />
     </main>
   );
 }

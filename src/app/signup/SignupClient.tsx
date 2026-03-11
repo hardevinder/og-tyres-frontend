@@ -106,12 +106,12 @@ export default function SignupClient() {
     }
 
     if (!form.state.trim()) {
-      setError("State is required");
+      setError("Province is required");
       return false;
     }
 
     if (!form.pincode.trim()) {
-      setError("Pincode is required");
+      setError("Postal code is required");
       return false;
     }
 
@@ -352,7 +352,7 @@ export default function SignupClient() {
 
                   <div>
                     <label className="block text-sm font-semibold text-white/80">
-                      State
+                      Province
                     </label>
                     <input
                       type="text"
@@ -361,14 +361,14 @@ export default function SignupClient() {
                       onChange={(e) =>
                         setForm((f) => ({ ...f, state: e.target.value }))
                       }
-                      placeholder="State"
+                      placeholder="Province"
                       required
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-white/80">
-                      Pincode
+                      Postal Code
                     </label>
                     <input
                       type="text"
@@ -377,7 +377,7 @@ export default function SignupClient() {
                       onChange={(e) =>
                         setForm((f) => ({ ...f, pincode: e.target.value }))
                       }
-                      placeholder="Pincode"
+                      placeholder="Postal Code"
                       required
                     />
                   </div>

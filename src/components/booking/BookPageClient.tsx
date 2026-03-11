@@ -3,7 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { ShoppingCart, ArrowRight } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 /* =========================
    API base helper
@@ -25,9 +27,17 @@ const API = getApiBase();
 /* =========================
    Helpers
 ========================= */
-function safeNumber(v: any, fallback = 1) {
+function safeNumber(v: any, fallback = 0) {
   const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? n : fallback;
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function formatINR(n: number) {
+  try {
+    return n.toLocaleString("en-IN");
+  } catch {
+    return String(n);
+  }
 }
 
 function normalizeImage(url: string) {
@@ -36,14 +46,6 @@ function normalizeImage(url: string) {
   if (u.startsWith("http://") || u.startsWith("https://")) return u;
   if (u.startsWith("/")) return u;
   return `/${u}`;
-}
-
-function todayStr() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = `${d.getMonth() + 1}`.padStart(2, "0");
-  const day = `${d.getDate()}`.padStart(2, "0");
-  return `${y}-${m}-${day}`;
 }
 
 function getToken() {
@@ -55,6 +57,23 @@ function getToken() {
     localStorage.getItem("accessToken") ||
     ""
   );
+}
+
+function categoryLabel(cat?: string) {
+  const value = String(cat || "").trim().toLowerCase();
+
+  if (value === "all-terrain") return "All Terrain";
+  if (value === "all-season") return "All Season";
+  if (value === "winter") return "Winter";
+  if (value === "performance") return "Performance";
+  if (value === "light-truck") return "Light Truck";
+
+  return value ? value : "General";
+}
+
+function normalizeItemId(v: any) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
 }
 
 function GoldPill({ children }: { children: React.ReactNode }) {
@@ -89,25 +108,6 @@ function Field({
   );
 }
 
-function Input(
-  props: React.InputHTMLAttributes<HTMLInputElement> & {
-    hasError?: boolean;
-  }
-) {
-  const { hasError, className, ...rest } = props;
-
-  return (
-    <input
-      {...rest}
-      className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 ${
-        hasError
-          ? "border-red-400/70 bg-red-500/10 focus:border-red-400 focus:bg-red-500/10"
-          : "border-white/10 bg-black/25 focus:border-[#f7c25a]/40 focus:bg-black/35"
-      } ${className || ""}`}
-    />
-  );
-}
-
 function TextArea(
   props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
     hasError?: boolean;
@@ -127,55 +127,72 @@ function TextArea(
   );
 }
 
-function Select(
-  props: React.SelectHTMLAttributes<HTMLSelectElement> & {
-    hasError?: boolean;
-  }
-) {
-  const { hasError, className, ...rest } = props;
-
+function FloatingCartButton({
+  totalQty,
+  subtotal,
+}: {
+  totalQty: number;
+  subtotal: number;
+}) {
   return (
-    <select
-      {...rest}
-      className={`w-full rounded-2xl border px-4 py-3 text-sm text-white outline-none transition ${
-        hasError
-          ? "border-red-400/70 bg-red-500/10 focus:border-red-400 focus:bg-red-500/10"
-          : "border-white/10 bg-black/25 focus:border-[#f7c25a]/40 focus:bg-black/35"
-      } ${className || ""}`}
-    />
+    <Link
+      href="/cart"
+      className="group fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-[320px] sm:bottom-5 sm:right-5 sm:w-auto"
+      aria-label="Open cart"
+    >
+      <div className="relative overflow-hidden rounded-2xl border border-[#f7c25a]/30 bg-black/85 px-4 py-3 text-white shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition-all duration-300 group-hover:-translate-y-0.5 group-hover:border-[#f7c25a]/55 group-hover:shadow-[0_24px_60px_rgba(0,0,0,0.55)] sm:rounded-3xl sm:px-5 sm:py-3.5">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(247,194,90,0.16),transparent_35%,transparent_100%)] opacity-80" />
+
+        <div className="relative flex items-center gap-3">
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/12">
+            <ShoppingCart className="h-5 w-5 text-[#f7c25a]" />
+            <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[22px] items-center justify-center rounded-full bg-[#f7c25a] px-1.5 py-0.5 text-[10px] font-black text-black shadow-lg">
+              {totalQty}
+            </span>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/50">
+              Your Cart
+            </div>
+            <div className="mt-0.5 flex items-center gap-2">
+              <span className="truncate text-sm font-black text-white sm:text-base">
+                ₹ {formatINR(subtotal)}
+              </span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/70">
+                {totalQty} item{totalQty > 1 ? "s" : ""}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/80 transition group-hover:bg-white/10 group-hover:text-white">
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }
 
 export default function BookPageClient() {
-  const sp = useSearchParams();
   const router = useRouter();
-
-  const tyreId = sp.get("tyreId") || sp.get("tireId") || sp.get("id") || "";
-  const product = sp.get("product") || "Selected Tyre";
-  const size = sp.get("size") || "—";
-  const category = sp.get("category") || "";
-  const image = normalizeImage(sp.get("image") || "");
-  const initialQty = safeNumber(sp.get("qty") || 1, 1);
+  const { items, subtotal, clear } = useCart();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [form, setForm] = useState({
-    vehicle_make_model: "",
-    vehicle_year: "",
-    preferred_date: "",
-    preferred_time: "",
     notes: "",
-    qty: initialQty,
   });
 
   const [fieldErrors, setFieldErrors] = useState<{
-    qty?: string;
+    notes?: string;
   }>({});
 
   const [submitting, setSubmitting] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<any>(null);
+  const [submittedItems, setSubmittedItems] = useState<any[]>([]);
 
   useEffect(() => {
     const token = getToken();
@@ -194,9 +211,46 @@ export default function BookPageClient() {
     setCheckingAuth(false);
   }, [router]);
 
+  const pricedSubtotal = useMemo(() => {
+    return items.reduce((sum: number, it: any) => {
+      const price = safeNumber(it?.price, 0);
+      const qty = Math.max(1, safeNumber(it?.qty, 1));
+      return price > 0 ? sum + price * qty : sum;
+    }, 0);
+  }, [items]);
+
+  const hasMissingPrice = useMemo(() => {
+    return items.some((it: any) => !(safeNumber(it?.price, 0) > 0));
+  }, [items]);
+
+  const displaySubtotal = hasMissingPrice ? pricedSubtotal : subtotal;
+
+  const totalQty = useMemo(() => {
+    return items.reduce(
+      (sum: number, it: any) => sum + Math.max(1, safeNumber(it?.qty, 1)),
+      0
+    );
+  }, [items]);
+
+  const validPayloadItems = useMemo(() => {
+    return items
+      .map((it: any) => {
+        const tyreId = normalizeItemId(it?.id ?? it?.tyre_id ?? it?.product_id);
+        const qty = Math.max(1, safeNumber(it?.qty, 1));
+
+        if (!tyreId) return null;
+
+        return {
+          tyre_id: tyreId,
+          qty,
+        };
+      })
+      .filter(Boolean) as Array<{ tyre_id: number; qty: number }>;
+  }, [items]);
+
   const canSubmit = useMemo(() => {
-    return String(tyreId).trim() && Number(form.qty) >= 1 && isLoggedIn;
-  }, [form.qty, tyreId, isLoggedIn]);
+    return isLoggedIn && items.length > 0 && validPayloadItems.length > 0;
+  }, [isLoggedIn, items.length, validPayloadItems.length]);
 
   function update<K extends keyof typeof form>(
     key: K,
@@ -206,34 +260,26 @@ export default function BookPageClient() {
 
     setFieldErrors((prev) => {
       const next = { ...prev };
-      if (key === "qty") delete next.qty;
+      if (key === "notes") delete next.notes;
       return next;
     });
   }
 
   function validateForm() {
-    const nextErrors: {
-      qty?: string;
-    } = {};
-
-    if (!tyreId) {
-      setError("Missing tyre id. Please go back and select a tyre again.");
-      return false;
-    }
+    setFieldErrors({});
 
     if (!getToken()) {
-      setError("Please login first to continue with booking.");
+      setError("Please login first to continue.");
       return false;
     }
 
-    if (!Number(form.qty) || Number(form.qty) < 1) {
-      nextErrors.qty = "Quantity must be at least 1.";
+    if (!items.length) {
+      setError("Your cart is empty. Please add tyres before placing the order.");
+      return false;
     }
 
-    setFieldErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length > 0) {
-      setError("Please fill all required fields correctly.");
+    if (!validPayloadItems.length) {
+      setError("Some cart items are invalid. Please remove them and try again.");
       return false;
     }
 
@@ -249,17 +295,8 @@ export default function BookPageClient() {
     const token = getToken();
 
     const payload = {
-      vehicle_make_model: form.vehicle_make_model.trim() || undefined,
-      vehicle_year: form.vehicle_year.trim() || undefined,
-      preferred_date: form.preferred_date || undefined,
-      preferred_time: form.preferred_time.trim() || undefined,
       notes: form.notes.trim() || undefined,
-      items: [
-        {
-          tyre_id: Number(tyreId),
-          qty: Math.max(1, Number(form.qty || 1)),
-        },
-      ],
+      items: validPayloadItems,
     };
 
     try {
@@ -286,19 +323,20 @@ export default function BookPageClient() {
           return;
         }
 
-        if (res.status === 400) {
-          throw new Error(
-            data?.message || "Please complete your address before booking."
-          );
+        if (res.status === 400 || res.status === 403 || res.status === 404) {
+          throw new Error(data?.message || "Unable to place order right now.");
         }
 
         throw new Error(data?.message || `HTTP ${res.status}`);
       }
 
+      setSubmittedItems(items);
       setSuccess(data?.booking || data || true);
+      clear();
+      setForm({ notes: "" });
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
-      setError(err?.message || "Failed to create booking.");
+      setError(err?.message || "Failed to place order.");
     } finally {
       setSubmitting(false);
     }
@@ -325,6 +363,11 @@ export default function BookPageClient() {
 
   if (success) {
     const booked = success?.id || success?.booking?.id;
+    const successItems = submittedItems.length ? submittedItems : items;
+    const successQty = successItems.reduce(
+      (sum: number, it: any) => sum + Math.max(1, safeNumber(it?.qty, 1)),
+      0
+    );
 
     return (
       <main className="min-h-screen bg-[#050505] text-white">
@@ -332,54 +375,111 @@ export default function BookPageClient() {
           <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_18%_15%,rgba(247,194,90,0.18),transparent_60%),radial-gradient(700px_420px_at_82%_18%,rgba(247,194,90,0.10),transparent_60%)]" />
           <div className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:56px_56px]" />
 
-          <div className="relative mx-auto max-w-4xl px-4 py-16 md:px-6">
+          <div className="relative mx-auto max-w-5xl px-4 py-16 md:px-6">
             <div className="rounded-[34px] border border-white/10 bg-white/[0.04] p-8 shadow-2xl backdrop-blur-xl md:p-10">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-[#f7c25a]/25 bg-[#f7c25a]/12 text-4xl">
                 ✅
               </div>
 
               <div className="mt-6 text-center">
-                <GoldPill>Booking Submitted</GoldPill>
+                <GoldPill>Order Submitted</GoldPill>
                 <h1 className="mt-4 text-3xl font-black tracking-tight md:text-5xl">
-                  Your booking request has been received
+                  Your order request has been received
                 </h1>
                 <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base">
                   Thank you for choosing OG Tires. Our team will review your
-                  request and connect with you soon regarding availability,
-                  confirmation, and fitment details.
+                  request and connect with you shortly regarding confirmation and
+                  delivery details.
                 </p>
 
                 {booked ? (
                   <div className="mt-5 inline-flex rounded-2xl border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-4 py-3 text-sm font-extrabold text-[#f7c25a]">
-                    Booking ID: #{booked}
+                    Order ID: #{booked}
                   </div>
                 ) : null}
               </div>
 
-              <div className="mt-8 grid gap-4 rounded-[28px] border border-white/10 bg-black/25 p-5 md:grid-cols-[180px_1fr]">
-                <div className="relative mx-auto h-40 w-40 overflow-hidden rounded-3xl border border-white/10 bg-white">
-                  <Image
-                    src={image}
-                    alt={product}
-                    fill
-                    className="object-contain p-4"
-                  />
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
+                    Products
+                  </div>
+                  <div className="mt-1 text-lg font-black text-white">
+                    {successItems.length}
+                  </div>
                 </div>
 
-                <div className="flex flex-col justify-center">
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
-                    Selected Tyre
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
+                    Total Qty
                   </div>
-                  <div className="mt-2 text-2xl font-black text-white">
-                    {product}
+                  <div className="mt-1 text-lg font-black text-white">
+                    {successQty}
                   </div>
-                  <div className="mt-2 text-sm text-white/75">Size: {size}</div>
-                  <div className="mt-1 text-sm text-white/75">
-                    Category: {category || "General"}
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
+                    Status
                   </div>
-                  <div className="mt-1 text-sm text-white/75">
-                    Quantity: {form.qty}
+                  <div className="mt-1 text-lg font-black text-[#f7c25a]">
+                    Pending
                   </div>
+                </div>
+              </div>
+
+              <div className="mt-8 rounded-[28px] border border-white/10 bg-black/25 p-5">
+                <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
+                  Ordered Items
+                </div>
+
+                <div className="mt-4 space-y-4">
+                  {successItems.map((it: any, idx: number) => {
+                    const title = `${it?.brand ? `${it.brand} ` : ""}${it?.name || "Tyre"}`;
+                    const qty = Math.max(1, safeNumber(it?.qty, 1));
+                    const image = normalizeImage(
+                      it?.image || it?.image_url || ""
+                    );
+
+                    return (
+                      <div
+                        key={`${it?.id || idx}-${it?.variant || it?.size || idx}`}
+                        className="grid gap-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-[88px_1fr_auto]"
+                      >
+                        <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-white/10 bg-white">
+                          <Image
+                            src={image}
+                            alt={title}
+                            fill
+                            className="object-contain p-2"
+                          />
+                        </div>
+
+                        <div>
+                          <div className="text-base font-black text-white">
+                            {title}
+                          </div>
+                          <div className="mt-1 text-sm text-white/70">
+                            Size: {it?.size || "—"}
+                          </div>
+                          <div className="mt-1 text-sm text-white/70">
+                            Category: {categoryLabel(
+                              it?.category || it?.category_slug || it?.category_title
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="md:text-right">
+                          <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
+                            Qty
+                          </div>
+                          <div className="mt-1 text-lg font-black text-white">
+                            {qty}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -388,7 +488,14 @@ export default function BookPageClient() {
                   href="/products"
                   className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
                 >
-                  Book Another Tyre
+                  Order More Tyres
+                </Link>
+
+                <Link
+                  href="/my-bookings"
+                  className="inline-flex items-center justify-center rounded-2xl bg-[#f7c25a] px-6 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
+                >
+                  View My Bookings
                 </Link>
 
                 <Link
@@ -406,214 +513,240 @@ export default function BookPageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white">
-      <section className="relative overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(1000px_540px_at_18%_15%,rgba(247,194,90,0.20),transparent_60%),radial-gradient(800px_500px_at_85%_15%,rgba(247,194,90,0.10),transparent_60%)]" />
-        <div className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:56px_56px]" />
+    <>
+      <main className="min-h-screen bg-[#050505] pb-28 text-white sm:pb-24">
+        <section className="relative overflow-hidden border-b border-white/10">
+          <div className="absolute inset-0 bg-[radial-gradient(1000px_540px_at_18%_15%,rgba(247,194,90,0.20),transparent_60%),radial-gradient(800px_500px_at_85%_15%,rgba(247,194,90,0.10),transparent_60%)]" />
+          <div className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:56px_56px]" />
 
-        <div className="relative mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
-          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl md:p-6">
-              <GoldPill>Booking Request</GoldPill>
+          <div className="relative mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
+            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl md:p-6">
+                <GoldPill>Cart Checkout</GoldPill>
 
-              <h1 className="mt-4 text-3xl font-black tracking-tight md:text-5xl">
-                Complete your tyre booking in a few easy steps
-              </h1>
+                <h1 className="mt-4 text-3xl font-black tracking-tight md:text-5xl">
+                  Review your cart and place your tyre order
+                </h1>
 
-              <p className="mt-4 text-sm leading-7 text-white/75 md:text-base">
-                Review your selected tyre, confirm quantity, add vehicle and
-                schedule details, and submit your booking request.
-              </p>
+                <p className="mt-4 text-sm leading-7 text-white/75 md:text-base">
+                  Your booking will include all tyres currently available in your
+                  cart.
+                </p>
 
-              <div className="mt-6 rounded-[28px] border border-white/10 bg-black/25 p-4">
-                <div className="relative h-60 w-full overflow-hidden rounded-[24px] border border-white/10 bg-white">
-                  <Image
-                    src={image}
-                    alt={product}
-                    fill
-                    className="object-contain p-6"
-                  />
-                </div>
-
-                <div className="mt-5">
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
-                    Selected Tyre
-                  </div>
-
-                  <div className="mt-2 text-2xl font-black text-white">
-                    {product}
-                  </div>
-
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
-                        Size
-                      </div>
-                      <div className="mt-1 text-sm font-bold text-white">
-                        {size}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
-                        Category
-                      </div>
-                      <div className="mt-1 text-sm font-bold text-white">
-                        {category || "General"}
-                      </div>
-                    </div>
-                  </div>
-
+                {hasMissingPrice ? (
                   <div className="mt-4 rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/8 px-4 py-3 text-sm text-[#f7c25a]">
-                    Address and contact details will be taken automatically from
-                    your account profile.
+                    Some items are missing price. You can still place the
+                    booking, and our team will confirm the final amount with you.
                   </div>
-                </div>
+                ) : null}
+
+                {items.length === 0 ? (
+                  <div className="mt-6 rounded-[28px] border border-white/10 bg-black/25 p-6">
+                    <div className="text-lg font-black text-white">
+                      Your cart is empty
+                    </div>
+                    <div className="mt-2 text-sm text-white/75">
+                      Add tyres to the cart first, then return here to place your
+                      order.
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <Link
+                        href="/products"
+                        className="inline-flex items-center justify-center rounded-2xl bg-[#f7c25a] px-5 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
+                      >
+                        Browse Products
+                      </Link>
+
+                      <Link
+                        href="/cart"
+                        className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
+                      >
+                        Go to Cart
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-4">
+                    {items.map((it: any) => {
+                      const title = `${it?.brand ? `${it.brand} ` : ""}${it?.name || "Tyre"}`;
+                      const qty = Math.max(1, safeNumber(it?.qty, 1));
+                      const price = safeNumber(it?.price, 0);
+                      const lineTotal = price > 0 ? price * qty : 0;
+                      const image = normalizeImage(
+                        it?.image || it?.image_url || ""
+                      );
+
+                      return (
+                        <div
+                          key={`${it?.id}-${it?.variant || it?.size || ""}`}
+                          className="rounded-[28px] border border-white/10 bg-black/25 p-4"
+                        >
+                          <div className="grid gap-4 md:grid-cols-[110px_1fr_auto]">
+                            <div className="relative h-24 w-24 overflow-hidden rounded-[22px] border border-white/10 bg-white md:h-24 md:w-24">
+                              <Image
+                                src={image}
+                                alt={title}
+                                fill
+                                className="object-contain p-3"
+                              />
+                            </div>
+
+                            <div>
+                              <div className="text-lg font-black text-white">
+                                {title}
+                              </div>
+
+                              <div className="mt-1 text-sm text-white/75">
+                                Size: {it?.size || "—"}
+                              </div>
+
+                              <div className="mt-1 text-sm text-white/75">
+                                Category: {categoryLabel(it?.category)}
+                              </div>
+
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-semibold text-white/75">
+                                  Qty: {qty}
+                                </span>
+
+                                {price > 0 ? (
+                                  <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
+                                    ₹ {formatINR(price)} each
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
+                                    Price to be confirmed
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="md:text-right">
+                              <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
+                                Line Total
+                              </div>
+                              <div className="mt-1 text-lg font-black text-white">
+                                {price > 0 ? `₹ ${formatINR(lineTotal)}` : "—"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
 
-            <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl md:p-6">
-              <div className="mb-6">
-                <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
-                  Booking Details
-                </div>
-                <h2 className="mt-2 text-2xl font-black tracking-tight md:text-3xl">
-                  Confirm quantity and schedule
-                </h2>
-              </div>
-
-              {error ? (
-                <div className="mb-5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                  {error}
-                </div>
-              ) : null}
-
-              {!tyreId ? (
-                <div className="mb-5 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
-                  Tyre details are missing. Please go back to products page and
-                  select a tyre first.
-                </div>
-              ) : null}
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-5 md:grid-cols-2">
-                  <Field label="Vehicle Make / Model">
-                    <Input
-                      value={form.vehicle_make_model}
-                      onChange={(e) =>
-                        update("vehicle_make_model", e.target.value)
-                      }
-                      placeholder="e.g. Mahindra Thar"
-                    />
-                  </Field>
-
-                  <Field label="Vehicle Year">
-                    <Input
-                      value={form.vehicle_year}
-                      onChange={(e) => update("vehicle_year", e.target.value)}
-                      placeholder="e.g. 2022"
-                    />
-                  </Field>
-                </div>
-
-                <div className="grid gap-5 md:grid-cols-3">
-                  <Field label="Quantity" required error={fieldErrors.qty}>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={form.qty}
-                      onChange={(e) =>
-                        update(
-                          "qty",
-                          Math.max(1, Number(e.target.value || 1))
-                        )
-                      }
-                      hasError={!!fieldErrors.qty}
-                    />
-                  </Field>
-
-                  <Field label="Preferred Date">
-                    <Input
-                      type="date"
-                      min={todayStr()}
-                      value={form.preferred_date}
-                      onChange={(e) =>
-                        update("preferred_date", e.target.value)
-                      }
-                    />
-                  </Field>
-
-                  <Field label="Preferred Time">
-                    <Select
-                      value={form.preferred_time}
-                      onChange={(e) =>
-                        update("preferred_time", e.target.value)
-                      }
-                    >
-                      <option value="">Select preferred time</option>
-                      <option value="Morning">Morning</option>
-                      <option value="Afternoon">Afternoon</option>
-                      <option value="Evening">Evening</option>
-                    </Select>
-                  </Field>
-                </div>
-
-                <Field label="Additional Notes">
-                  <TextArea
-                    rows={5}
-                    value={form.notes}
-                    onChange={(e) => update("notes", e.target.value)}
-                    placeholder="Any special requirement, installation request, urgent timing, exact fitment concern..."
-                  />
-                </Field>
-
-                <div className="rounded-[28px] border border-white/10 bg-black/25 p-4">
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl md:p-6">
+                <div className="mb-6">
                   <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
-                    Booking Summary
+                    Order Details
                   </div>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight md:text-3xl">
+                    Confirm and place order
+                  </h2>
+                </div>
 
-                  <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
-                        Product
+                {error ? (
+                  <div className="mb-5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    {error}
+                  </div>
+                ) : null}
+
+                {items.length === 0 ? (
+                  <div className="mb-5 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
+                    Your cart is empty. Please add tyres before placing the
+                    order.
+                  </div>
+                ) : null}
+
+                {items.length > 0 && validPayloadItems.length !== items.length ? (
+                  <div className="mb-5 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
+                    Some cart items look invalid and may not be submitted.
+                    Please review your cart if order does not go through.
+                  </div>
+                ) : null}
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <Field label="Additional Notes">
+                    <TextArea
+                      rows={5}
+                      value={form.notes}
+                      onChange={(e) => update("notes", e.target.value)}
+                      placeholder="Any special delivery note or requirement..."
+                      hasError={!!fieldErrors.notes}
+                    />
+                  </Field>
+
+                  <div className="rounded-[28px] border border-white/10 bg-black/25 p-4">
+                    <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
+                      Order Summary
+                    </div>
+
+                    <div className="mt-4 space-y-3 text-sm">
+                      <div className="flex items-center justify-between text-white/80">
+                        <span>Total Products</span>
+                        <span className="font-bold text-white">
+                          {items.length}
+                        </span>
                       </div>
-                      <div className="mt-1 text-sm font-bold text-white">
-                        {product}
+
+                      <div className="flex items-center justify-between text-white/80">
+                        <span>Total Quantity</span>
+                        <span className="font-bold text-white">{totalQty}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-white/80">
+                        <span>Subtotal</span>
+                        <span className="font-bold text-white">
+                          ₹ {formatINR(displaySubtotal)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-white/70">
+                        <span>Shipping</span>
+                        <span className="text-white/80">Calculated later</span>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
-                        Qty
-                      </div>
-                      <div className="mt-1 text-sm font-bold text-white">
-                        {form.qty}
-                      </div>
+                    <div className="mt-5 rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/8 px-4 py-3 text-sm text-[#f7c25a]">
+                      Your contact and address details will be taken
+                      automatically from your account profile.
+                    </div>
+
+                    <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs leading-6 text-white/65">
+                      Want to change quantities or remove items? Please update
+                      them in your cart before placing the order.
                     </div>
                   </div>
-                </div>
 
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <button
-                    type="submit"
-                    disabled={submitting || !tyreId || !canSubmit}
-                    className="inline-flex min-w-[220px] items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {submitting ? "Booking..." : "Book Now"}
-                  </button>
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <button
+                      type="submit"
+                      disabled={submitting || !canSubmit}
+                      className="inline-flex min-w-[220px] items-center justify-center rounded-2xl bg-[#f7c25a] px-6 py-3 text-sm font-extrabold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {submitting ? "Placing Order..." : "Place Order"}
+                    </button>
 
-                  <Link
-                    href="/products"
-                    className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
-                  >
-                    Continue Shopping
-                  </Link>
-                </div>
-              </form>
+                    <Link
+                      href="/cart"
+                      className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10"
+                    >
+                      Back to Cart
+                    </Link>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+
+      {!success && items.length > 0 ? (
+        <FloatingCartButton totalQty={totalQty} subtotal={displaySubtotal} />
+      ) : null}
+    </>
   );
 }

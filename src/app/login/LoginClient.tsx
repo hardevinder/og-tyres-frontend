@@ -19,7 +19,7 @@ function getApiBase(): string {
     return loc.replace(/\/+$/, "") + "/api";
   }
 
-  return "";
+  return "http://localhost:5055/api";
 }
 
 const API = getApiBase();
@@ -30,6 +30,11 @@ function GoldPill({ children }: { children: React.ReactNode }) {
       {children}
     </span>
   );
+}
+
+function isAdminUser(u: any) {
+  const role = String(u?.role || u?.user?.role || "").toUpperCase();
+  return role === "ADMIN" || role === "SUPERADMIN" || role === "OWNER";
 }
 
 /** Prevent redirect loop + open-redirect */
@@ -45,14 +50,32 @@ function sanitizeRedirect(raw: string | null) {
   return r;
 }
 
+function clearAuth() {
+  try {
+    localStorage.removeItem("accessToken");
+    sessionStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
+  } catch {}
+}
+
+function extractUser(data: any) {
+  return data?.user || data?.data?.user || data?.data || null;
+}
+
+function extractToken(data: any) {
+  return data?.token || data?.accessToken || data?.data?.token || data?.data?.accessToken || null;
+}
+
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const redirectTo = useMemo(
-    () => sanitizeRedirect(searchParams?.get("redirectTo")),
-    [searchParams]
-  );
+  const redirectTo = useMemo(() => {
+    const r1 = searchParams?.get("redirectTo");
+    const r2 = searchParams?.get("redirect");
+    return sanitizeRedirect(r1 || r2);
+  }, [searchParams]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,14 +108,23 @@ export default function LoginClient() {
       const meUrl = API ? `${API}/auth/me` : "/api/auth/me";
       const res = await fetch(meUrl, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
       });
 
-      if (!res.ok) return;
+      if (!res.ok) return null;
 
       const meData = await res.json();
-      const userObj = meData?.user || meData?.data || meData;
-      if (userObj) localStorage.setItem("user", JSON.stringify(userObj));
-    } catch {}
+      const userObj = meData?.user || meData?.data?.user || meData?.data || meData;
+
+      if (userObj) {
+        localStorage.setItem("user", JSON.stringify(userObj));
+        return userObj;
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,7 +133,10 @@ export default function LoginClient() {
     if (!validate()) return;
 
     setLoading(true);
+
     try {
+      clearAuth();
+
       const loginUrl = API ? `${API}/auth/login` : "/api/auth/login";
       const res = await fetch(loginUrl, {
         method: "POST",
@@ -118,7 +153,7 @@ export default function LoginClient() {
         return;
       }
 
-      const token = data?.token || data?.accessToken;
+      const token = extractToken(data);
       if (!token) {
         setError("No token received");
         return;
@@ -127,14 +162,22 @@ export default function LoginClient() {
       if (remember) localStorage.setItem("accessToken", token);
       else sessionStorage.setItem("accessToken", token);
 
-      if (data?.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+      let user = extractUser(data);
+
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
       } else {
-        await fetchAndStoreUser(token);
+        user = await fetchAndStoreUser(token);
       }
 
       notifyAuthChange();
-      router.replace(redirectTo || "/admin");
+
+      if (isAdminUser(user)) {
+        router.replace("/admin");
+        return;
+      }
+
+      router.replace(redirectTo || "/");
     } catch (err: any) {
       setError(err?.message || "Network error");
     } finally {
@@ -145,10 +188,7 @@ export default function LoginClient() {
   return (
     <main className="min-h-screen bg-[#050505] text-white">
       <div className="relative min-h-screen overflow-hidden">
-
-        {/* Golden glow background */}
         <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_18%_22%,rgba(247,194,90,0.18),transparent_60%),radial-gradient(900px_500px_at_80%_20%,rgba(247,194,90,0.10),transparent_60%)]" />
-
         <div className="absolute inset-0 opacity-[0.18] bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:56px_56px]" />
 
         <div className="relative mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-14">
@@ -159,13 +199,11 @@ export default function LoginClient() {
             className="w-full max-w-md"
           >
             <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 shadow-[0_30px_80px_rgba(0,0,0,0.55)] backdrop-blur">
-
-              {/* Header */}
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <GoldPill>OG Gold Edition</GoldPill>
 
-                  <h1 className="mt-3 text-2xl md:text-3xl font-extrabold tracking-tight">
+                  <h1 className="mt-3 text-2xl font-extrabold tracking-tight md:text-3xl">
                     Welcome back
                   </h1>
 
@@ -196,8 +234,6 @@ export default function LoginClient() {
               )}
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-
-                {/* Email */}
                 <div>
                   <label className="block text-sm font-semibold text-white/80">
                     Email
@@ -214,7 +250,6 @@ export default function LoginClient() {
                   />
                 </div>
 
-                {/* Password */}
                 <div>
                   <label className="block text-sm font-semibold text-white/80">
                     Password
@@ -241,7 +276,6 @@ export default function LoginClient() {
                   </div>
                 </div>
 
-                {/* Remember */}
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 text-sm text-white/70">
                     <input
@@ -254,20 +288,17 @@ export default function LoginClient() {
                   </label>
                 </div>
 
-                {/* ⭐ PREMIUM GOLD BUTTON */}
                 <button
                   type="submit"
                   disabled={loading}
                   className="group relative w-full overflow-hidden rounded-2xl border border-[#f7c25a]/40 bg-black/40 px-5 py-3 text-sm font-extrabold text-[#f7c25a] backdrop-blur transition-all duration-300 hover:border-[#f7c25a] hover:shadow-[0_0_25px_rgba(247,194,90,0.35)] disabled:opacity-60"
                 >
                   <span className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-[#f7c25a]/30 to-transparent transition-transform duration-700 group-hover:translate-x-[100%]" />
-
                   <span className="relative z-10 tracking-wide">
                     {loading ? "Signing in..." : "Sign In"}
                   </span>
                 </button>
 
-                {/* Register */}
                 <div className="pt-2 text-center text-sm text-white/60">
                   Don’t have an account?{" "}
                   <button
@@ -287,7 +318,6 @@ export default function LoginClient() {
                     ← Back to Home
                   </Link>
                 </div>
-
               </form>
             </div>
 
