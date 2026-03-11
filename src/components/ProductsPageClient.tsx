@@ -33,6 +33,20 @@ const API_ROOT = API.replace(/\/api$/, "");
 ========================= */
 type ApiTyre = any;
 
+type ApiCategory = {
+  id: number | string;
+  title?: string;
+  slug?: string;
+  description?: string | null;
+  image_url?: string | null;
+  active?: boolean | number;
+};
+
+type CategoryOption = {
+  title: string;
+  value: string;
+};
+
 type Product = {
   id: string;
   name: string;
@@ -56,21 +70,20 @@ type CartItem = {
   qty: number;
 };
 
-const categories = [
-  { title: "All", value: "all" },
-  { title: "All Terrain", value: "all-terrain" },
-  { title: "All Season", value: "all-season" },
-  { title: "Winter", value: "winter" },
-  { title: "Performance", value: "performance" },
-  { title: "Light Truck", value: "light-truck" },
-];
-
 /* =========================
    Helpers
 ========================= */
-function catLabel(cat?: string) {
+function normalizeSlug(v: any) {
+  return String(v || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+}
+
+function catLabel(cat: string | undefined, categories: CategoryOption[]) {
+  if (!cat) return "All";
   const found = categories.find((c) => c.value === cat);
-  return found?.title || "All";
+  return found?.title || cat;
 }
 
 function toId(v: any) {
@@ -102,17 +115,16 @@ function normalizeBrand(row: any) {
 }
 
 function guessCategory(row: any): Product["category"] {
-  const rawSlug = String(
+  const rawSlug = normalizeSlug(
     row?.category_slug ||
       row?.category?.slug ||
       row?.category ||
       row?.tyre_type ||
       row?.type ||
       ""
-  )
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
+  );
+
+  if (rawSlug) return rawSlug;
 
   const rawTitle = String(
     row?.category_title ||
@@ -131,7 +143,7 @@ function guessCategory(row: any): Product["category"] {
     .replace(/\s+/g, " ")
     .trim();
 
-  const text = `${rawSlug} ${rawTitle} ${rawName}`;
+  const text = `${rawTitle} ${rawName}`;
 
   if (
     text.includes("light truck") ||
@@ -361,7 +373,9 @@ function FloatingCartButton({
             </div>
             <div className="mt-0.5 flex items-center gap-2">
               <span className="truncate text-sm font-black text-white sm:text-base">
-                {subtotal > 0 ? `₹ ${formatPrice(subtotal)}` : `${cartCount} item${cartCount > 1 ? "s" : ""}`}
+                {subtotal > 0
+                  ? `₹ ${formatPrice(subtotal)}`
+                  : `${cartCount} item${cartCount > 1 ? "s" : ""}`}
               </span>
               <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/70">
                 {cartCount} item{cartCount > 1 ? "s" : ""}
@@ -381,12 +395,16 @@ function FloatingCartButton({
 export default function ProductsPage() {
   const sp = useSearchParams();
   const router = useRouter();
-  const catFromUrl = (sp.get("cat") || "").trim();
+  const catFromUrl = normalizeSlug((sp.get("cat") || "").trim());
 
   const [activeCat, setActiveCat] = useState<string>(catFromUrl || "all");
   const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([
+    { title: "All", value: "all" },
+  ]);
   const [cartCount, setCartCount] = useState(0);
   const [cartSubtotal, setCartSubtotal] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -414,48 +432,99 @@ export default function ProductsPage() {
   useEffect(() => {
     let alive = true;
 
-    async function load() {
+    async function loadCategories() {
+      setCategoriesLoading(true);
+
+      try {
+        const res = await fetch(`${API}/categories`, {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        const rows = Array.isArray(data)
+          ? data
+          : data?.data || data?.items || [];
+
+        const dynamicCategories: CategoryOption[] = rows
+          .filter((row: ApiCategory) => {
+            const active = row?.active;
+            return active === undefined || active === true || active === 1;
+          })
+          .map((row: ApiCategory) => {
+            const value = normalizeSlug(row?.slug || row?.title || "");
+            const title = String(row?.title || row?.slug || "").trim();
+            return {
+              title: title || "Category",
+              value,
+            };
+          })
+          .filter((cat: CategoryOption) => cat.value);
+
+        const unique = Array.from(
+          new Map(
+            [{ title: "All", value: "all" }, ...dynamicCategories].map((c) => [
+              c.value,
+              c,
+            ])
+          ).values()
+        );
+
+        if (!alive) return;
+        setCategories(unique);
+      } catch (e) {
+        console.error("Categories load error:", e);
+        if (!alive) return;
+        setCategories([{ title: "All", value: "all" }]);
+      } finally {
+        if (!alive) return;
+        setCategoriesLoading(false);
+      }
+    }
+
+    loadCategories();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+
+    async function loadProducts() {
       setLoading(true);
       setErr(null);
 
       try {
-        const endpoints = [`${API}/tyres`];
+        const res = await fetch(`${API}/tyres`, {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
+        });
 
-        let data: any = null;
-        let lastError: any = null;
-
-        for (const url of endpoints) {
-          try {
-            const res = await fetch(url, {
-              method: "GET",
-              cache: "no-store",
-              headers: {
-                Accept: "application/json",
-              },
-            });
-
-            if (!res.ok) {
-              const text = await res.text().catch(() => "");
-              throw new Error(
-                `HTTP ${res.status} ${res.statusText}${text ? ` - ${text}` : ""}`
-              );
-            }
-
-            data = await res.json();
-            break;
-          } catch (e) {
-            lastError = e;
-            console.error("Fetch failed for:", url, e);
-          }
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(
+            `HTTP ${res.status} ${res.statusText}${text ? ` - ${text}` : ""}`
+          );
         }
 
-        if (!data) {
-          throw lastError || new Error("Failed to fetch products");
-        }
+        const data = await res.json();
 
         const rows = Array.isArray(data)
           ? data
           : data?.data || data?.items || [];
+
         const list: Product[] = (rows || []).map(normalizeTyre);
 
         if (!alive) return;
@@ -471,7 +540,7 @@ export default function ProductsPage() {
       }
     }
 
-    load();
+    loadProducts();
 
     return () => {
       alive = false;
@@ -484,11 +553,20 @@ export default function ProductsPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  useEffect(() => {
+    if (activeCat === "all") return;
+
+    const exists = categories.some((c) => c.value === activeCat);
+    if (!exists) {
+      setActiveCat("all");
+    }
+  }, [activeCat, categories]);
+
   const filtered = useMemo(() => {
     let list = [...products];
 
     if (activeCat !== "all") {
-      list = list.filter((p) => p.category === activeCat);
+      list = list.filter((p) => normalizeSlug(p.category) === activeCat);
     }
 
     return list;
@@ -514,7 +592,9 @@ export default function ProductsPage() {
   }
 
   const pageTitle =
-    activeCat === "all" ? "All Tires" : `${catLabel(activeCat)} Tires`;
+    activeCat === "all"
+      ? "All Tires"
+      : `${catLabel(activeCat, categories)} Tires`;
 
   return (
     <main className="min-h-screen bg-[#070707] pb-28 text-white sm:pb-24">
@@ -575,23 +655,30 @@ export default function ProductsPage() {
 
       <section className="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 md:pb-20">
         <div className="mb-8 flex flex-wrap gap-3">
-          {categories.map((cat) => {
-            const active = activeCat === cat.value;
-            return (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => setActiveCat(cat.value)}
-                className={`rounded-full px-4 py-2 text-sm font-bold transition ${
-                  active
-                    ? "border border-[#f7c25a]/40 bg-[#f7c25a] text-black"
-                    : "border border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]"
-                }`}
-              >
-                {cat.title}
-              </button>
-            );
-          })}
+          {categoriesLoading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 w-28 rounded-full border border-white/10 bg-white/[0.04]"
+                />
+              ))
+            : categories.map((cat) => {
+                const active = activeCat === cat.value;
+                return (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setActiveCat(cat.value)}
+                    className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                      active
+                        ? "border-[#f7c25a]/40 bg-[#f7c25a] text-black"
+                        : "border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+                    }`}
+                  >
+                    {cat.title}
+                  </button>
+                );
+              })}
         </div>
 
         {loading ? (
@@ -679,7 +766,7 @@ export default function ProductsPage() {
 
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-medium text-white/75">
-                        Category: {catLabel(p.category)}
+                        Category: {catLabel(p.category, categories)}
                       </span>
                     </div>
 
