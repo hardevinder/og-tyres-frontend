@@ -80,11 +80,9 @@ export default function Navbar() {
 
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showHeader, setShowHeader] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-  const lastScrollY = useRef(0);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const isLoggedIn = !!user && !!readStoredToken();
@@ -136,19 +134,7 @@ export default function Navbar() {
   useEffect(() => {
     const onScroll = () => {
       const currentY = window.scrollY || 0;
-
       setScrolled(currentY > 10);
-
-      if (currentY <= 20) {
-        setShowHeader(true);
-      } else if (currentY > lastScrollY.current) {
-        setShowHeader(false);
-        setProfileMenuOpen(false);
-      } else {
-        setShowHeader(true);
-      }
-
-      lastScrollY.current = currentY;
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -206,23 +192,17 @@ export default function Navbar() {
 
   const headerClass = useMemo(() => {
     return [
-      "fixed left-0 right-0 top-0 z-[60] transform transition-all duration-300 ease-out",
-      showHeader ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
+      "sticky top-0 z-[200] w-full transition-all duration-300 ease-out",
       scrolled
-        ? "border-b border-[#f7c25a]/10 bg-black/80 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl"
-        : "border-b border-white/5 bg-black/95",
+        ? "border-b border-[#f7c25a]/10 bg-[#050505] shadow-[0_18px_50px_rgba(0,0,0,0.55)]"
+        : "border-b border-white/5 bg-[#050505]",
     ].join(" ");
-  }, [scrolled, showHeader]);
+  }, [scrolled]);
 
   return (
     <>
       <header className={headerClass}>
-        <div
-          className={[
-            "mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 transition-all duration-300 md:px-6",
-            scrolled ? "py-3" : "py-4",
-          ].join(" ")}
-        >
+        <div className="mx-auto flex h-[82px] max-w-7xl items-center justify-between gap-3 px-4 md:h-[86px] md:px-6">
           <Link href="/" className="flex items-center gap-3">
             <div className="relative h-10 w-[150px] sm:h-11 sm:w-[180px]">
               <Image
@@ -235,7 +215,7 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-3">
+          <nav className="hidden items-center gap-2 lg:flex">
             {visibleNavLinks.map((l) => {
               const active = isActive(l.href);
 
@@ -244,7 +224,7 @@ export default function Navbar() {
                   key={l.href}
                   href={l.href}
                   className={[
-                    "rounded-2xl border px-5 py-3 text-base font-bold tracking-[0.01em] transition-all duration-300",
+                    "rounded-xl border px-4 py-2.5 text-sm font-bold tracking-[0.01em] transition-all duration-300",
                     active
                       ? "border-[#f7c25a]/30 bg-[#f7c25a]/12 text-[#f7c25a] shadow-[0_10px_30px_rgba(247,194,90,0.08)]"
                       : "border-transparent text-white hover:border-[#f7c25a]/15 hover:bg-white/[0.04] hover:text-[#f7c25a]",
@@ -256,10 +236,10 @@ export default function Navbar() {
             })}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden items-center gap-3 md:flex">
             <a
               href={PHONE_HREF}
-              className="inline-flex items-center gap-2 rounded-2xl border border-[#f7c25a]/20 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white transition hover:border-[#f7c25a]/40 hover:bg-white/[0.07]"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#f7c25a]/20 bg-[#111111] px-4 py-2.5 text-sm font-semibold text-white transition hover:border-[#f7c25a]/40 hover:bg-[#171717]"
             >
               <PhoneCall className="h-4 w-4 text-[#f7c25a]" />
               <span className="text-white/70">Call:</span>
@@ -273,7 +253,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setProfileMenuOpen((prev) => !prev)}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition hover:border-[#f7c25a]/20 hover:bg-white/10 hover:text-[#f7c25a]"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#111111] px-4 py-2.5 text-sm font-bold text-white transition hover:border-[#f7c25a]/20 hover:bg-[#171717] hover:text-[#f7c25a]"
                 >
                   <User className="h-4 w-4" />
                   <span>{displayName}</span>
@@ -286,7 +266,7 @@ export default function Navbar() {
                 </button>
 
                 {profileMenuOpen && (
-                  <div className="absolute right-0 top-full z-[80] mt-3 w-60 overflow-hidden rounded-2xl border border-[#f7c25a]/10 bg-[#0b0b0b] shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
+                  <div className="absolute right-0 top-full z-[220] mt-3 w-60 overflow-hidden rounded-2xl border border-[#f7c25a]/10 bg-[#0b0b0b] shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
                     <div className="border-b border-white/10 px-4 py-3">
                       <div className="text-sm font-bold text-white">
                         {user?.name || "Customer"}
@@ -300,7 +280,7 @@ export default function Navbar() {
                       <Link
                         href="/account"
                         onClick={() => setProfileMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/8 hover:text-[#f7c25a]"
+                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/10 hover:text-[#f7c25a]"
                       >
                         <User className="h-4 w-4" />
                         My Account
@@ -309,7 +289,7 @@ export default function Navbar() {
                       <Link
                         href="/my-bookings"
                         onClick={() => setProfileMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/8 hover:text-[#f7c25a]"
+                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/10 hover:text-[#f7c25a]"
                       >
                         <ClipboardList className="h-4 w-4" />
                         My Bookings
@@ -318,7 +298,7 @@ export default function Navbar() {
                       <Link
                         href="/account/edit"
                         onClick={() => setProfileMenuOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/8 hover:text-[#f7c25a]"
+                        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/10 hover:text-[#f7c25a]"
                       >
                         <Settings className="h-4 w-4" />
                         Edit Profile
@@ -339,7 +319,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition hover:border-[#f7c25a]/20 hover:bg-white/10 hover:text-[#f7c25a]"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#111111] px-4 py-2.5 text-sm font-bold text-white transition hover:border-[#f7c25a]/20 hover:bg-[#171717] hover:text-[#f7c25a]"
               >
                 <LogIn className="h-4 w-4" />
                 Login
@@ -348,7 +328,7 @@ export default function Navbar() {
 
             <Link
               href="/products"
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#f7c25a] to-[#d79b2b] px-5 py-3 text-sm font-extrabold text-black shadow-[0_12px_28px_rgba(247,194,90,0.18)] transition hover:scale-[1.02] hover:brightness-110"
+              className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#f7c25a] to-[#d79b2b] px-5 py-2.5 text-sm font-extrabold text-black shadow-[0_12px_28px_rgba(247,194,90,0.18)] transition hover:scale-[1.02] hover:brightness-110"
             >
               Browse Products
             </Link>
@@ -357,14 +337,14 @@ export default function Navbar() {
           <div className="flex items-center gap-2 md:hidden">
             <a
               href={PHONE_HREF}
-              className="inline-flex items-center justify-center rounded-xl border border-[#f7c25a]/20 bg-white/[0.04] p-2.5 text-white transition hover:bg-white/[0.08]"
+              className="inline-flex items-center justify-center rounded-xl border border-[#f7c25a]/20 bg-[#111111] p-2.5 text-white transition hover:bg-[#171717]"
               aria-label="Call OG Tires"
             >
               <PhoneCall className="h-5 w-5 text-[#f7c25a]" />
             </a>
 
             <button
-              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2.5 transition hover:bg-white/10"
+              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-[#111111] p-2.5 transition hover:bg-[#171717]"
               onClick={() => setOpen(true)}
               aria-label="Open menu"
             >
@@ -372,166 +352,164 @@ export default function Navbar() {
             </button>
           </div>
         </div>
+      </header>
 
-        {open && (
-          <div className="fixed inset-0 z-[70] lg:hidden">
-            <div
-              className="absolute inset-0 bg-black/75 backdrop-blur-sm"
-              onClick={() => setOpen(false)}
-            />
+      {open && (
+        <div className="fixed inset-0 z-[210] lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/80"
+            onClick={() => setOpen(false)}
+          />
 
-            <div className="absolute right-0 top-0 h-full w-[88%] max-w-sm border-l border-[#f7c25a]/10 bg-[#090909] shadow-[0_20px_60px_rgba(0,0,0,0.65)]">
-              <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
-                <div className="relative h-10 w-[150px]">
-                  <Image
-                    src="/brand/og-logo.png"
-                    alt="OG Tires & Rims"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-
-                <button
-                  className="rounded-xl border border-white/10 bg-white/5 p-2 transition hover:bg-white/10"
-                  onClick={() => setOpen(false)}
-                  aria-label="Close menu"
-                >
-                  <X className="h-5 w-5 text-white" />
-                </button>
+          <div className="absolute right-0 top-0 h-full w-[86%] max-w-[340px] border-l border-[#f7c25a]/10 bg-[#090909] shadow-[0_20px_60px_rgba(0,0,0,0.65)]">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+              <div className="relative h-10 w-[145px]">
+                <Image
+                  src="/brand/og-logo.png"
+                  alt="OG Tires & Rims"
+                  fill
+                  className="object-contain"
+                />
               </div>
 
-              <div className="px-4 py-5">
-                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 transition hover:bg-white/10">
-                  <Search className="h-4 w-4 text-[#f7c25a]" />
-                  <input
-                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40"
-                    placeholder="Search tire size or brand..."
-                  />
-                </div>
+              <button
+                className="rounded-xl border border-white/10 bg-[#111111] p-2 transition hover:bg-[#171717]"
+                onClick={() => setOpen(false)}
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5 text-white" />
+              </button>
+            </div>
 
-                {isLoggedIn && (
-                  <div className="mt-5 rounded-2xl border border-[#f7c25a]/10 bg-white/[0.03] p-4">
-                    <div className="text-sm font-bold text-white">
-                      {user?.name || "Customer"}
-                    </div>
-                    <div className="mt-1 break-all text-xs text-white/55">
-                      {user?.email || ""}
-                    </div>
+            <div className="h-[calc(100%-72px)] overflow-y-auto px-4 py-4">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#111111] px-3 py-2.5 transition hover:bg-[#171717]">
+                <Search className="h-4 w-4 text-[#f7c25a]" />
+                <input
+                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/40"
+                  placeholder="Search tire size or brand..."
+                />
+              </div>
+
+              {isLoggedIn && (
+                <div className="mt-4 rounded-xl border border-[#f7c25a]/10 bg-[#111111] p-3.5">
+                  <div className="text-sm font-bold text-white">
+                    {user?.name || "Customer"}
                   </div>
+                  <div className="mt-1 break-all text-xs text-white/55">
+                    {user?.email || ""}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 space-y-2">
+                {visibleNavLinks.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    onClick={() => setOpen(false)}
+                    className={[
+                      "block rounded-xl border px-4 py-3 text-[15px] font-semibold transition",
+                      isActive(l.href)
+                        ? "border-[#f7c25a]/30 bg-[#f7c25a]/12 text-[#f7c25a]"
+                        : "border-white/10 bg-[#111111] text-white hover:bg-[#171717] hover:text-[#f7c25a]",
+                    ].join(" ")}
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="mt-4 grid gap-2">
+                <a
+                  href={PHONE_HREF}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#f7c25a]/20 bg-[#111111] px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f7c25a]/40 hover:bg-[#171717]"
+                >
+                  <PhoneCall className="h-4 w-4 text-[#f7c25a]" />
+                  {PHONE_NUMBER}
+                </a>
+
+                {isLoggedIn ? (
+                  <>
+                    <Link
+                      href="/account"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#111111] px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#171717] hover:text-[#f7c25a]"
+                    >
+                      <User className="h-4 w-4" />
+                      My Account
+                    </Link>
+
+                    <Link
+                      href="/my-bookings"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#111111] px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#171717] hover:text-[#f7c25a]"
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      My Bookings
+                    </Link>
+
+                    <Link
+                      href="/account/edit"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#111111] px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#171717] hover:text-[#f7c25a]"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Edit Profile
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-red-500/20"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#111111] px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#171717] hover:text-[#f7c25a]"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Login
+                    </Link>
+
+                    <Link
+                      href="/register"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center justify-center rounded-xl border border-[#f7c25a]/20 bg-[#1a1406] px-4 py-3 text-center text-sm font-semibold text-[#f7c25a] transition hover:bg-[#241b08]"
+                    >
+                      Create Account
+                    </Link>
+                  </>
                 )}
 
-                <div className="mt-5 space-y-3">
-                  {visibleNavLinks.map((l) => (
-                    <Link
-                      key={l.href}
-                      href={l.href}
-                      onClick={() => setOpen(false)}
-                      className={[
-                        "block rounded-2xl border px-4 py-3.5 text-base font-bold transition",
-                        isActive(l.href)
-                          ? "border-[#f7c25a]/30 bg-[#f7c25a]/12 text-[#f7c25a]"
-                          : "border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-[#f7c25a]",
-                      ].join(" ")}
-                    >
-                      {l.label}
-                    </Link>
-                  ))}
+                <Link
+                  href="/products"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl bg-gradient-to-r from-[#f7c25a] to-[#d79b2b] px-4 py-3 text-center text-sm font-extrabold text-black transition hover:brightness-110"
+                >
+                  Browse Products
+                </Link>
+              </div>
+
+              <div className="mt-5 rounded-xl border border-[#f7c25a]/10 bg-[#111111] p-4">
+                <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
+                  Customer Assistance
                 </div>
-
-                <div className="mt-5 grid gap-3">
-                  <a
-                    href={PHONE_HREF}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#f7c25a]/20 bg-white/[0.04] px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-[#f7c25a]/40 hover:bg-white/[0.08]"
-                  >
-                    <PhoneCall className="h-4 w-4 text-[#f7c25a]" />
-                    {PHONE_NUMBER}
-                  </a>
-
-                  {isLoggedIn ? (
-                    <>
-                      <Link
-                        href="/account"
-                        onClick={() => setOpen(false)}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-white/10 hover:text-[#f7c25a]"
-                      >
-                        <User className="h-4 w-4" />
-                        My Account
-                      </Link>
-
-                      <Link
-                        href="/my-bookings"
-                        onClick={() => setOpen(false)}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-white/10 hover:text-[#f7c25a]"
-                      >
-                        <ClipboardList className="h-4 w-4" />
-                        My Bookings
-                      </Link>
-
-                      <Link
-                        href="/account/edit"
-                        onClick={() => setOpen(false)}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-white/10 hover:text-[#f7c25a]"
-                      >
-                        <Settings className="h-4 w-4" />
-                        Edit Profile
-                      </Link>
-
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-red-500/20"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href="/login"
-                        onClick={() => setOpen(false)}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-bold text-white transition hover:bg-white/10 hover:text-[#f7c25a]"
-                      >
-                        <LogIn className="h-4 w-4" />
-                        Login
-                      </Link>
-
-                      <Link
-                        href="/register"
-                        onClick={() => setOpen(false)}
-                        className="inline-flex items-center justify-center rounded-2xl border border-[#f7c25a]/20 bg-[#f7c25a]/10 px-4 py-3 text-center text-sm font-bold text-[#f7c25a] transition hover:bg-[#f7c25a]/15"
-                      >
-                        Create Account
-                      </Link>
-                    </>
-                  )}
-
-                  <Link
-                    href="/products"
-                    onClick={() => setOpen(false)}
-                    className="rounded-2xl bg-gradient-to-r from-[#f7c25a] to-[#d79b2b] px-4 py-3 text-center text-sm font-extrabold text-black transition hover:brightness-110"
-                  >
-                    Browse Products
-                  </Link>
-                </div>
-
-                <div className="mt-6 rounded-2xl border border-[#f7c25a]/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] p-4">
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#f7c25a]">
-                    Customer Assistance
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-white/65">
-                    Contact us for tire size guidance, fitment support, product
-                    availability, and help choosing the right option for your
-                    vehicle.
-                  </p>
-                </div>
+                <p className="mt-2 text-sm leading-6 text-white/65">
+                  Contact us for tire size guidance, fitment support, product
+                  availability, and help choosing the right option for your
+                  vehicle.
+                </p>
               </div>
             </div>
           </div>
-        )}
-      </header>
-
-      <div className={scrolled ? "h-[76px]" : "h-[88px]"} />
+        </div>
+      )}
     </>
   );
 }

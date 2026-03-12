@@ -36,6 +36,7 @@ type Tyre = {
   image_url?: string | null;
   specs_json?: any;
   stock_qty?: number | null;
+  price?: number | null;
   active?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -61,7 +62,6 @@ function cn(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(" ");
 }
 
-// Normalize list shapes like backend
 function normalizeArrayResponse<T = any>(json: any): T[] {
   if (!json) return [];
   if (Array.isArray(json)) return json as T[];
@@ -72,13 +72,35 @@ function normalizeArrayResponse<T = any>(json: any): T[] {
   return [];
 }
 
+function safeNumber(value: any): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function formatCAD(value: any) {
+  const n = safeNumber(value);
+  if (n == null) return "-";
+
+  try {
+    return new Intl.NumberFormat("en-CA", {
+      style: "currency",
+      currency: "CAD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+  } catch {
+    return `$${Number(n).toFixed(2)} CAD`;
+  }
+}
+
 async function apiFetch(path: string, init: RequestInit = {}) {
   const token = readToken();
   const url = `${API}${path.startsWith("/") ? "" : "/"}${path}`;
 
   const headers = new Headers(init.headers || {});
-  if (!headers.has("Content-Type") && !(init.body instanceof FormData))
+  if (!headers.has("Content-Type") && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
+  }
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const res = await fetch(url, { ...init, headers });
@@ -113,7 +135,21 @@ function safeJsonParse(input: string) {
   }
 }
 
-/** ✅ upload image helper (FormData key = "file") */
+function parseOptionalPrice(input: string) {
+  const raw = String(input || "").trim();
+  if (!raw) return undefined;
+
+  const cleaned = raw.replace(/[$,\s]/g, "");
+  const n = Number(cleaned);
+
+  if (!Number.isFinite(n) || n < 0) {
+    throw new Error("Price must be a valid amount");
+  }
+
+  return Number(n.toFixed(2));
+}
+
+/** upload image helper (FormData key = "file") */
 async function uploadTyreImage(tyreId: number, file: File) {
   const token = readToken();
   const fd = new FormData();
@@ -146,9 +182,9 @@ export default function AdminProductsPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // toast
   const [toast, setToast] = useState<Toast | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+
   function showToast(type: Toast["type"], message: string, timeout = 3500) {
     if (toastTimerRef.current) {
       window.clearTimeout(toastTimerRef.current);
@@ -168,11 +204,11 @@ export default function AdminProductsPanel() {
   const [newSize, setNewSize] = useState("");
   const [newSku, setNewSku] = useState("");
   const [newStockQty, setNewStockQty] = useState<string>("");
+  const [newPrice, setNewPrice] = useState<string>("");
   const [newSpecsJson, setNewSpecsJson] = useState<string>("");
   const [newCategoryId, setNewCategoryId] = useState<string | number | "">("");
   const [newActive, setNewActive] = useState(true);
 
-  // ✅ image upload (create)
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const newImageRef = useRef<HTMLInputElement | null>(null);
 
@@ -187,16 +223,15 @@ export default function AdminProductsPanel() {
   const [eSize, setESize] = useState("");
   const [eSku, setESku] = useState("");
   const [eStockQty, setEStockQty] = useState<string>("");
+  const [ePrice, setEPrice] = useState<string>("");
   const [eSpecsJson, setESpecsJson] = useState<string>("");
   const [eCategoryId, setECategoryId] = useState<string | number | "">("");
   const [eActive, setEActive] = useState<boolean>(true);
 
-  // ✅ image upload (edit)
   const [eNewImageFile, setENewImageFile] = useState<File | null>(null);
   const [eRemoveImage, setERemoveImage] = useState(false);
   const editImageRef = useRef<HTMLInputElement | null>(null);
 
-  // image preview modal
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
   const headerPill = useMemo(() => {
@@ -235,7 +270,6 @@ export default function AdminProductsPanel() {
     }
   }
 
-  // ---------- Create tyre ----------
   async function handleCreate(e?: React.FormEvent) {
     if (e) e.preventDefault();
 
@@ -247,6 +281,7 @@ export default function AdminProductsPanel() {
     setCreating(true);
     try {
       const specs = safeJsonParse(newSpecsJson);
+      const parsedPrice = parseOptionalPrice(newPrice);
 
       const payload: any = {
         category_id: Number(newCategoryId),
@@ -256,6 +291,7 @@ export default function AdminProductsPanel() {
         sku: newSku.trim() ? newSku.trim() : undefined,
         specs_json: specs,
         stock_qty: newStockQty.trim() === "" ? undefined : Number(newStockQty),
+        price: parsedPrice,
         active: newActive,
       };
 
@@ -268,14 +304,16 @@ export default function AdminProductsPanel() {
         (createdResp && (createdResp.data ?? createdResp.tyre ?? createdResp)) ||
         null;
 
-      // ✅ If created, upload image (if selected)
       let finalTyre: Tyre | null = created?.id ? created : null;
 
       if (created?.id && newImageFile) {
         try {
           const up = await uploadTyreImage(created.id, newImageFile);
           const imageUrl = up?.image_url ?? up?.tyre?.image_url ?? null;
-          finalTyre = { ...created, image_url: imageUrl ?? created.image_url };
+          finalTyre = {
+            ...created,
+            image_url: imageUrl ?? created.image_url,
+          };
         } catch (upErr: any) {
           showToast("error", upErr?.message || "Image upload failed");
         }
@@ -289,12 +327,12 @@ export default function AdminProductsPanel() {
 
       showToast("success", "Tyre created");
 
-      // reset
       setNewName("");
       setNewBrand("");
       setNewSize("");
       setNewSku("");
       setNewStockQty("");
+      setNewPrice("");
       setNewSpecsJson("");
       setNewCategoryId("");
       setNewActive(true);
@@ -309,7 +347,6 @@ export default function AdminProductsPanel() {
     }
   }
 
-  // ---------- Delete ----------
   async function handleDelete(id: number) {
     if (!confirm("Delete tyre?")) return;
     try {
@@ -322,7 +359,6 @@ export default function AdminProductsPanel() {
     }
   }
 
-  // ---------- Edit modal ----------
   function openEditModal(t: Tyre) {
     setEditingTyre(t);
     setEName(t.name || "");
@@ -330,11 +366,11 @@ export default function AdminProductsPanel() {
     setESize(t.size || "");
     setESku(t.sku ?? "");
     setEStockQty(t.stock_qty == null ? "" : String(t.stock_qty));
+    setEPrice(t.price == null ? "" : String(t.price));
     setESpecsJson(t.specs_json ? JSON.stringify(t.specs_json, null, 2) : "");
     setECategoryId(t.category_id ?? "");
     setEActive(t.active ?? true);
 
-    // image edit states
     setENewImageFile(null);
     setERemoveImage(false);
     if (editImageRef.current) editImageRef.current.value = "";
@@ -354,8 +390,8 @@ export default function AdminProductsPanel() {
     setEditSaving(true);
     try {
       const specs = safeJsonParse(eSpecsJson);
+      const parsedPrice = parseOptionalPrice(ePrice);
 
-      // ✅ 1) Update tyre fields (JSON)
       const payload: any = {
         category_id: Number(eCategoryId),
         brand: eBrand.trim(),
@@ -364,10 +400,10 @@ export default function AdminProductsPanel() {
         sku: eSku.trim() ? eSku.trim() : undefined,
         specs_json: specs,
         stock_qty: eStockQty.trim() === "" ? undefined : Number(eStockQty),
+        price: parsedPrice,
         active: eActive,
       };
 
-      // optional: remove image (sets image_url null)
       if (eRemoveImage) payload.image_url = null;
 
       const json = await apiFetch(`/tyres/${editingTyre.id}`, {
@@ -377,7 +413,6 @@ export default function AdminProductsPanel() {
 
       let updated = (json && (json.data ?? json.tyre ?? json)) || null;
 
-      // ✅ 2) If user selected a new image file, upload it
       if (eNewImageFile) {
         try {
           const up = await uploadTyreImage(editingTyre.id, eNewImageFile);
@@ -407,10 +442,10 @@ export default function AdminProductsPanel() {
     }
   }
 
-  // ---------- Image preview helpers ----------
   function openImagePreview(url: string) {
     setImagePreviewUrl(url);
   }
+
   function closeImagePreview() {
     setImagePreviewUrl(null);
   }
@@ -422,7 +457,6 @@ export default function AdminProductsPanel() {
         <div className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(to_right,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:56px_56px]" />
 
         <div className="relative p-6 space-y-6">
-          {/* Toast */}
           {toast && toast.open && (
             <div
               role="status"
@@ -451,7 +485,6 @@ export default function AdminProductsPanel() {
             </div>
           )}
 
-          {/* Header */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="inline-flex items-center rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
@@ -461,7 +494,7 @@ export default function AdminProductsPanel() {
                 Tires Manager
               </h2>
               <p className="mt-1 text-sm text-white/70">
-                Create, edit, manage tires (OG Gold theme).
+                Create, edit, manage tires with price in CAD.
               </p>
             </div>
 
@@ -504,10 +537,7 @@ export default function AdminProductsPanel() {
                       }
                       className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#f7c25a]/60 focus:ring-2 focus:ring-[#f7c25a]/20"
                     >
-                      <option
-                        value=""
-                        className="bg-[#0b0b0b] text-white"
-                      >
+                      <option value="" className="bg-[#0b0b0b] text-white">
                         — Select —
                       </option>
                       {categories.map((c) => (
@@ -587,6 +617,9 @@ export default function AdminProductsPanel() {
                       Stock qty (optional)
                     </label>
                     <input
+                      type="number"
+                      min="0"
+                      step="1"
                       value={newStockQty}
                       onChange={(e) => setNewStockQty(e.target.value)}
                       className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#f7c25a]/60 focus:ring-2 focus:ring-[#f7c25a]/20"
@@ -596,45 +629,59 @@ export default function AdminProductsPanel() {
 
                   <div>
                     <label className="text-xs font-semibold text-white/70">
-                      Image (upload)
+                      Price (CAD)
                     </label>
                     <input
-                      ref={newImageRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setNewImageFile(e.target.files?.[0] || null)
-                      }
-                      className="mt-2 block w-full text-xs text-white/70"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newPrice}
+                      onChange={(e) => setNewPrice(e.target.value)}
+                      className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#f7c25a]/60 focus:ring-2 focus:ring-[#f7c25a]/20"
+                      placeholder="e.g. 149.99"
                     />
-                    {newImageFile ? (
-                      <div className="mt-2 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-                        <UploadCloud className="h-4 w-4 text-white/60" />
-                        <div className="text-xs">
-                          <div className="font-semibold">{newImageFile.name}</div>
-                          <div className="text-white/40">
-                            {Math.round(newImageFile.size / 1024)} KB
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNewImageFile(null);
-                            if (newImageRef.current)
-                              newImageRef.current.value = "";
-                          }}
-                          className="ml-auto p-2 rounded-xl hover:bg-white/10 text-red-300"
-                          title="Remove"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="mt-2 text-[11px] text-white/35">
-                        Optional. You can upload after create too.
-                      </div>
-                    )}
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-white/70">
+                    Image (upload)
+                  </label>
+                  <input
+                    ref={newImageRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setNewImageFile(e.target.files?.[0] || null)
+                    }
+                    className="mt-2 block w-full text-xs text-white/70"
+                  />
+                  {newImageFile ? (
+                    <div className="mt-2 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+                      <UploadCloud className="h-4 w-4 text-white/60" />
+                      <div className="text-xs">
+                        <div className="font-semibold">{newImageFile.name}</div>
+                        <div className="text-white/40">
+                          {Math.round(newImageFile.size / 1024)} KB
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewImageFile(null);
+                          if (newImageRef.current) newImageRef.current.value = "";
+                        }}
+                        className="ml-auto p-2 rounded-xl hover:bg-white/10 text-red-300"
+                        title="Remove"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-[11px] text-white/35">
+                      Optional. You can upload after create too.
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -666,10 +713,10 @@ export default function AdminProductsPanel() {
                       setNewSize("");
                       setNewSku("");
                       setNewStockQty("");
+                      setNewPrice("");
                       setNewSpecsJson("");
                       setNewCategoryId("");
                       setNewActive(true);
-
                       setNewImageFile(null);
                       if (newImageRef.current) newImageRef.current.value = "";
                     }}
@@ -700,6 +747,7 @@ export default function AdminProductsPanel() {
                         <th className="p-3">Name</th>
                         <th className="p-3">Size</th>
                         <th className="p-3">Category</th>
+                        <th className="p-3">Price</th>
                         <th className="p-3">Stock</th>
                         <th className="p-3">Active</th>
                         <th className="p-3">Actions</th>
@@ -708,7 +756,8 @@ export default function AdminProductsPanel() {
                     <tbody>
                       {tires.map((t) => {
                         const catName =
-                          categories.find((c) => c.id === Number(t.category_id))?.title ?? "-";
+                          categories.find((c) => c.id === Number(t.category_id))
+                            ?.title ?? "-";
                         const img = t.image_url
                           ? resolveImageUrl(t.image_url)
                           : null;
@@ -743,6 +792,9 @@ export default function AdminProductsPanel() {
                             </td>
                             <td className="p-3 align-top text-white/80">
                               {catName}
+                            </td>
+                            <td className="p-3 align-top text-[#f7c25a] font-bold whitespace-nowrap">
+                              {formatCAD(t.price)}
                             </td>
                             <td className="p-3 align-top text-[#f7c25a] font-bold">
                               {t.stock_qty ?? "-"}
@@ -825,10 +877,7 @@ export default function AdminProductsPanel() {
                         }
                         className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#f7c25a]/60"
                       >
-                        <option
-                          value=""
-                          className="bg-[#0b0b0b] text-white"
-                        >
+                        <option value="" className="bg-[#0b0b0b] text-white">
                           — Select —
                         </option>
                         {categories.map((c) => (
@@ -904,9 +953,27 @@ export default function AdminProductsPanel() {
                         Stock qty (optional)
                       </label>
                       <input
+                        type="number"
+                        min="0"
+                        step="1"
                         value={eStockQty}
                         onChange={(e) => setEStockQty(e.target.value)}
                         className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#f7c25a]/60"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-white/70">
+                        Price (CAD)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={ePrice}
+                        onChange={(e) => setEPrice(e.target.value)}
+                        className="mt-1 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-[#f7c25a]/60"
+                        placeholder="e.g. 149.99"
                       />
                     </div>
 
@@ -967,8 +1034,9 @@ export default function AdminProductsPanel() {
                             type="button"
                             onClick={() => {
                               setENewImageFile(null);
-                              if (editImageRef.current)
+                              if (editImageRef.current) {
                                 editImageRef.current.value = "";
+                              }
                             }}
                             className="ml-auto p-2 rounded-xl hover:bg-white/10 text-red-300"
                             title="Remove"

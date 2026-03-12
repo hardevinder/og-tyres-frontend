@@ -16,15 +16,16 @@ type CartItem = {
   qty?: number;
 };
 
-function formatUSD(n: number) {
+function formatCAD(n: number) {
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-CA", {
       style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
+      currency: "CAD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(n);
   } catch {
-    return `$${String(n)}`;
+    return `$${Number(n || 0).toFixed(2)} CAD`;
   }
 }
 
@@ -50,20 +51,18 @@ export default function CartPage() {
 
   const safeItems = Array.isArray(items) ? items : [];
 
-  const hasVisiblePrices = false;
+  const hasVisiblePrices = true;
 
-  const hasMissingPrice = safeItems.some((it) => !(Number(it.price) > 0));
+  const hasMissingPrice = safeItems.some((it) => !(Number(it.price) >= 0));
 
   const pricedSubtotal = safeItems.reduce((sum: number, it) => {
     const price = Number(it.price) || 0;
-    const qty = Number(it.qty) || 0;
-    if (price > 0) return sum + price * qty;
-    return sum;
+    const qty = Math.max(1, Number(it.qty) || 1);
+    return sum + price * qty;
   }, 0);
 
-  const displaySubtotal = hasMissingPrice
-    ? pricedSubtotal
-    : Number(subtotal || 0);
+  const displaySubtotal =
+    Number(subtotal) > 0 ? Number(subtotal) : Number(pricedSubtotal || 0);
 
   return (
     <main className="min-h-screen bg-[#050505] text-white">
@@ -89,17 +88,16 @@ export default function CartPage() {
                 Review selected tires, update quantities, then proceed to book.
               </p>
 
-              {!hasVisiblePrices ? (
+              {hasMissingPrice ? (
                 <div className="mt-3 text-sm text-[#f7c25a]/90">
-                  Prices are hidden. You can still review your selected items
-                  and continue.
+                  Some items do not have a valid price yet. Those items are shown
+                  as CAD 0.00 until updated by admin.
                 </div>
-              ) : hasMissingPrice ? (
+              ) : (
                 <div className="mt-3 text-sm text-[#f7c25a]/90">
-                  Some items are missing price, but you can still continue to
-                  the booking page.
+                  All prices are shown in Canadian Dollars.
                 </div>
-              ) : null}
+              )}
             </div>
 
             {safeItems.length > 0 ? (
@@ -173,9 +171,10 @@ export default function CartPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-4 lg:col-span-2">
               {safeItems.map((it) => {
-                const hasPrice = Number(it.price) > 0;
+                const price = Number(it.price) || 0;
+                const hasPrice = price >= 0;
                 const qty = Math.max(1, Number(it.qty) || 1);
-                const lineTotal = hasPrice ? Number(it.price) * qty : 0;
+                const lineTotal = price * qty;
                 const title = `${it.brand ? `${it.brand} ` : ""}${it.name || "Tire"}`;
                 const itemVariant = it.variant || it.size || "";
 
@@ -229,17 +228,15 @@ export default function CartPage() {
                                 </span>
                               ) : null}
 
-                              {hasVisiblePrices ? (
-                                hasPrice ? (
-                                  <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
-                                    {formatUSD(Number(it.price))} each
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-3 py-1 text-xs font-extrabold text-[#f7c25a]">
-                                    Price not added
-                                  </span>
-                                )
-                              ) : null}
+                              {hasPrice ? (
+                                <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
+                                  {formatCAD(price)} each
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-3 py-1 text-xs font-extrabold text-[#f7c25a]">
+                                  Price not added
+                                </span>
+                              )}
                             </div>
                           </div>
 
@@ -277,9 +274,7 @@ export default function CartPage() {
                             />
 
                             <button
-                              onClick={() =>
-                                updateQty(it.id, itemVariant, qty + 1)
-                              }
+                              onClick={() => updateQty(it.id, itemVariant, qty + 1)}
                               className="h-10 w-10 rounded-r-2xl text-white transition hover:bg-white/5"
                               aria-label="Increase quantity"
                             >
@@ -287,27 +282,13 @@ export default function CartPage() {
                             </button>
                           </div>
 
-                          {hasVisiblePrices ? (
-                            <>
-                              <div className="ml-auto text-sm text-white/70">
-                                Line total
-                              </div>
+                          <div className="ml-auto text-sm text-white/70">
+                            Line total
+                          </div>
 
-                              {hasPrice ? (
-                                <div className="text-lg font-extrabold text-white">
-                                  {formatUSD(lineTotal)}
-                                </div>
-                              ) : (
-                                <div className="text-sm font-extrabold text-[#f7c25a]">
-                                  —
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="ml-auto text-sm font-semibold text-white/60">
-                              Qty: {qty}
-                            </div>
-                          )}
+                          <div className="text-lg font-extrabold text-white">
+                            {formatCAD(lineTotal)}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -360,22 +341,18 @@ export default function CartPage() {
                   <span className="text-white/80">Ready to proceed</span>
                 </div>
 
-                {hasVisiblePrices ? (
-                  <div className="flex justify-between text-white/80">
-                    <span>Subtotal</span>
-                    <span className="text-white">
-                      {formatUSD(displaySubtotal)}
-                    </span>
-                  </div>
-                ) : null}
+                <div className="flex justify-between text-white/80">
+                  <span>Subtotal</span>
+                  <span className="text-white">{formatCAD(displaySubtotal)}</span>
+                </div>
               </div>
 
               <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-5">
                 <span className="text-sm font-semibold text-white/80">
-                  {hasVisiblePrices ? "Total" : "Selected Items"}
+                  Total
                 </span>
                 <span className="text-2xl font-extrabold text-white">
-                  {safeItems.reduce((sum, it) => sum + (Number(it.qty) || 0), 0)}
+                  {formatCAD(displaySubtotal)}
                 </span>
               </div>
 
