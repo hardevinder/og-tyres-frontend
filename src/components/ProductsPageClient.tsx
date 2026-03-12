@@ -44,6 +44,7 @@ type ApiCategory = {
 };
 
 type CategoryOption = {
+  id?: string;
   title: string;
   value: string;
 };
@@ -79,12 +80,58 @@ function normalizeSlug(v: any) {
   return String(v || "")
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, "-");
+    .replace(/[_\s]+/g, "-")
+    .replace(/&/g, "and")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function canonicalCategory(v: any): string {
+  const raw = normalizeSlug(v);
+
+  if (!raw) return "";
+
+  if (
+    raw === "all-terrain" ||
+    raw === "allterrain" ||
+    raw === "a-t" ||
+    raw === "at"
+  ) {
+    return "all-terrain";
+  }
+
+  if (
+    raw === "all-season" ||
+    raw === "all-seasons" ||
+    raw === "allseason" ||
+    raw === "touring"
+  ) {
+    return "all-season";
+  }
+
+  if (raw === "light-truck" || raw === "lighttruck" || raw === "lt") {
+    return "light-truck";
+  }
+
+  if (
+    raw === "performance" ||
+    raw === "high-performance" ||
+    raw === "sport" ||
+    raw === "sports"
+  ) {
+    return "performance";
+  }
+
+  if (raw === "winter" || raw === "snow") {
+    return "winter";
+  }
+
+  return raw;
 }
 
 function catLabel(cat: string | undefined, categories: CategoryOption[]) {
   if (!cat) return "All";
-  const found = categories.find((c) => c.value === cat);
+  const found = categories.find((c) => c.value === canonicalCategory(cat));
   return found?.title || cat;
 }
 
@@ -116,17 +163,74 @@ function normalizeBrand(row: any) {
   return raw;
 }
 
-function guessCategory(row: any): Product["category"] {
-  const rawSlug = normalizeSlug(
-    row?.category_slug ||
-      row?.category?.slug ||
-      row?.category ||
-      row?.tyre_type ||
-      row?.type ||
-      ""
-  );
+function buildCategoryLookup(rows: ApiCategory[]) {
+  const byId = new Map<string, string>();
+  const byText = new Map<string, string>();
 
-  if (rawSlug) return rawSlug;
+  for (const row of rows || []) {
+    const id = String(row?.id ?? "").trim();
+    const title = String(row?.title || "").trim();
+    const slug = String(row?.slug || "").trim();
+
+    const canonical = canonicalCategory(slug || title);
+
+    if (!canonical) continue;
+
+    if (id) byId.set(id, canonical);
+    if (title) byText.set(canonicalCategory(title), canonical);
+    if (slug) byText.set(canonicalCategory(slug), canonical);
+  }
+
+  return { byId, byText };
+}
+
+function guessCategory(
+  row: any,
+  categoryLookup?: {
+    byId: Map<string, string>;
+    byText: Map<string, string>;
+  }
+): Product["category"] {
+  const categoryId =
+    row?.category_id ??
+    row?.category?.id ??
+    (typeof row?.category === "number" ? row?.category : null);
+
+  if (categoryId != null && categoryLookup?.byId?.has(String(categoryId))) {
+    return categoryLookup.byId.get(String(categoryId));
+  }
+
+  const textCandidates = [
+    row?.category_slug,
+    row?.category?.slug,
+    typeof row?.category === "string" ? row?.category : "",
+    row?.category_title,
+    row?.category?.title,
+    row?.category_name,
+    row?.tyre_type,
+    row?.type,
+    row?.badge,
+    row?.tags,
+  ];
+
+  for (const candidate of textCandidates) {
+    const key = canonicalCategory(candidate);
+    if (!key) continue;
+
+    if (categoryLookup?.byText?.has(key)) {
+      return categoryLookup.byText.get(key);
+    }
+
+    if (
+      key === "all-terrain" ||
+      key === "all-season" ||
+      key === "winter" ||
+      key === "performance" ||
+      key === "light-truck"
+    ) {
+      return key;
+    }
+  }
 
   const rawTitle = String(
     row?.category_title ||
@@ -221,12 +325,18 @@ function resolveImg(url: any) {
   return `${API_ROOT}/${u.replace(/^\/+/, "")}`;
 }
 
-function normalizeTyre(row: ApiTyre): Product {
+function normalizeTyre(
+  row: ApiTyre,
+  categoryLookup?: {
+    byId: Map<string, string>;
+    byText: Map<string, string>;
+  }
+): Product {
   const id = toId(row?.id ?? row?.uuid ?? row?.slug ?? row?.sku);
   const name = String(row?.name ?? row?.title ?? "Tire").trim();
   const brand = normalizeBrand(row);
   const size = normalizeSize(row) || "—";
-  const category = guessCategory(row);
+  const category = guessCategory(row, categoryLookup);
   const badge = guessBadge(row);
   const image = resolveImg(
     row?.image_url ?? row?.image ?? row?.thumbnail_url ?? row?.img
@@ -344,7 +454,7 @@ function FloatingCartButton({
 export default function ProductsPage() {
   const sp = useSearchParams();
   const router = useRouter();
-  const catFromUrl = normalizeSlug((sp.get("cat") || "").trim());
+  const catFromUrl = canonicalCategory((sp.get("cat") || "").trim());
 
   const { items, subtotal, addItem } = useCart() as {
     items: CartItem[];
@@ -357,6 +467,7 @@ export default function ProductsPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [rawCategories, setRawCategories] = useState<ApiCategory[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([
     { title: "All", value: "all" },
   ]);
@@ -392,15 +503,17 @@ export default function ProductsPage() {
           ? data
           : data?.data || data?.items || [];
 
-        const dynamicCategories: CategoryOption[] = rows
-          .filter((row: ApiCategory) => {
-            const active = row?.active;
-            return active === undefined || active === true || active === 1;
-          })
+        const filteredRows = (rows || []).filter((row: ApiCategory) => {
+          const active = row?.active;
+          return active === undefined || active === true || active === 1;
+        });
+
+        const dynamicCategories: CategoryOption[] = filteredRows
           .map((row: ApiCategory) => {
-            const value = normalizeSlug(row?.slug || row?.title || "");
+            const value = canonicalCategory(row?.slug || row?.title || "");
             const title = String(row?.title || row?.slug || "").trim();
             return {
+              id: String(row?.id ?? ""),
               title: title || "Category",
               value,
             };
@@ -417,10 +530,12 @@ export default function ProductsPage() {
         );
 
         if (!alive) return;
+        setRawCategories(filteredRows);
         setCategories(unique);
       } catch (e) {
         console.error("Categories load error:", e);
         if (!alive) return;
+        setRawCategories([]);
         setCategories([{ title: "All", value: "all" }]);
       } finally {
         if (!alive) return;
@@ -464,7 +579,10 @@ export default function ProductsPage() {
           ? data
           : data?.data || data?.items || [];
 
-        const list: Product[] = (rows || []).map(normalizeTyre);
+        const lookup = buildCategoryLookup(rawCategories);
+        const list: Product[] = (rows || []).map((row: ApiTyre) =>
+          normalizeTyre(row, lookup)
+        );
 
         if (!alive) return;
         setProducts(list);
@@ -484,7 +602,7 @@ export default function ProductsPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [rawCategories]);
 
   useEffect(() => {
     if (!toast) return;
@@ -505,7 +623,7 @@ export default function ProductsPage() {
     let list = [...products];
 
     if (activeCat !== "all") {
-      list = list.filter((p) => normalizeSlug(p.category) === activeCat);
+      list = list.filter((p) => canonicalCategory(p.category) === activeCat);
     }
 
     return list;
@@ -551,6 +669,21 @@ export default function ProductsPage() {
     });
 
     setToast(`${p.brand ? `${p.brand} ` : ""}${p.name} added to cart`);
+  }
+
+  function handleCategoryClick(value: string) {
+    const next = canonicalCategory(value) || "all";
+    setActiveCat(next);
+
+    const params = new URLSearchParams(sp.toString());
+    if (next === "all") {
+      params.delete("cat");
+    } else {
+      params.set("cat", next);
+    }
+
+    const qs = params.toString();
+    router.replace(qs ? `/products?${qs}` : "/products");
   }
 
   const pageTitle =
@@ -630,7 +763,7 @@ export default function ProductsPage() {
                   <button
                     key={cat.value}
                     type="button"
-                    onClick={() => setActiveCat(cat.value)}
+                    onClick={() => handleCategoryClick(cat.value)}
                     className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
                       active
                         ? "border-[#f7c25a]/40 bg-[#f7c25a] text-black"
@@ -671,7 +804,7 @@ export default function ProductsPage() {
               Try another category.
             </p>
             <button
-              onClick={() => setActiveCat("all")}
+              onClick={() => handleCategoryClick("all")}
               className="mt-6 rounded-2xl bg-[#f7c25a] px-6 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
             >
               Show All Tires
