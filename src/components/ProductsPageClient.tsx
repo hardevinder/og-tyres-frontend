@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShoppingCart, ArrowRight } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 /* =========================
    API base helper
@@ -63,11 +64,12 @@ type CartItem = {
   id: string;
   name: string;
   brand?: string;
-  size: string;
-  image: string;
+  size?: string;
+  image?: string;
   category?: string;
   price?: number;
   qty: number;
+  variant?: string;
 };
 
 /* =========================
@@ -280,59 +282,6 @@ function getToken() {
   );
 }
 
-function getCart(): CartItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem("og_cart");
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveCart(items: CartItem[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("og_cart", JSON.stringify(items));
-  window.dispatchEvent(new Event("cart-updated"));
-}
-
-function addToCart(product: Product) {
-  const cart = getCart();
-  const existingIndex = cart.findIndex((item) => item.id === product.id);
-
-  if (existingIndex >= 0) {
-    cart[existingIndex].qty += 1;
-  } else {
-    cart.push({
-      id: product.id,
-      name: product.name,
-      brand: product.brand,
-      size: product.size,
-      image: product.image,
-      category: product.category,
-      price: product.price || 0,
-      qty: 1,
-    });
-  }
-
-  saveCart(cart);
-  return cart;
-}
-
-function getCartCount() {
-  return getCart().reduce((sum, item) => sum + Number(item.qty || 0), 0);
-}
-
-function getCartSubtotal() {
-  return getCart().reduce((sum, item) => {
-    const price = Number(item.price || 0);
-    const qty = Number(item.qty || 0);
-    return sum + price * qty;
-  }, 0);
-}
-
 function formatPrice(n: number) {
   try {
     return n.toLocaleString("en-IN");
@@ -397,6 +346,12 @@ export default function ProductsPage() {
   const router = useRouter();
   const catFromUrl = normalizeSlug((sp.get("cat") || "").trim());
 
+  const { items, subtotal, addItem } = useCart() as {
+    items: CartItem[];
+    subtotal: number;
+    addItem: (item: CartItem) => void;
+  };
+
   const [activeCat, setActiveCat] = useState<string>(catFromUrl || "all");
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -405,23 +360,7 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<CategoryOption[]>([
     { title: "All", value: "all" },
   ]);
-  const [cartCount, setCartCount] = useState(0);
-  const [cartSubtotal, setCartSubtotal] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    const refreshCart = () => {
-      setCartCount(getCartCount());
-      setCartSubtotal(getCartSubtotal());
-    };
-
-    refreshCart();
-    window.addEventListener("cart-updated", refreshCart);
-
-    return () => {
-      window.removeEventListener("cart-updated", refreshCart);
-    };
-  }, []);
 
   useEffect(() => {
     if (catFromUrl && catFromUrl !== activeCat) {
@@ -572,6 +511,20 @@ export default function ProductsPage() {
     return list;
   }, [activeCat, products]);
 
+  const cartCount = useMemo(() => {
+    return (items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0);
+  }, [items]);
+
+  const cartSubtotal = useMemo(() => {
+    const computed = (items || []).reduce((sum, item) => {
+      const price = Number(item.price || 0);
+      const qty = Number(item.qty || 0);
+      return sum + price * qty;
+    }, 0);
+
+    return computed > 0 ? computed : Number(subtotal || 0);
+  }, [items, subtotal]);
+
   function handleBookNow(p: Product) {
     const bookingHref = buildBookingHref(p);
     const token = getToken();
@@ -585,9 +538,18 @@ export default function ProductsPage() {
   }
 
   function handleAddToCart(p: Product) {
-    addToCart(p);
-    setCartCount(getCartCount());
-    setCartSubtotal(getCartSubtotal());
+    addItem({
+      id: p.id,
+      name: p.name,
+      brand: p.brand,
+      size: p.size,
+      image: p.image,
+      category: p.category,
+      price: p.price || 0,
+      qty: 1,
+      variant: p.size || "",
+    });
+
     setToast(`${p.brand ? `${p.brand} ` : ""}${p.name} added to cart`);
   }
 

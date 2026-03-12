@@ -10,6 +10,8 @@ import {
   Phone,
   MapPin,
   CarFront,
+  Mail,
+  User,
 } from "lucide-react";
 
 /* =========================
@@ -28,6 +30,7 @@ function getApiBase(): string {
   return "http://localhost:5055/api";
 }
 const API = getApiBase();
+const API_ROOT = API.replace(/\/api$/, "");
 
 function readToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -48,9 +51,9 @@ function cn(...xs: Array<string | false | null | undefined>) {
 type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "DELIVERED";
 
 type BookingItem = {
-  id?: number;
+  id?: number | string;
   qty?: number;
-  tyre_id: number;
+  tyre_id: number | string;
   brand?: string | null;
   name?: string | null;
   size?: string | null;
@@ -64,17 +67,32 @@ type Booking = {
   customer_name: string;
   phone: string;
   email?: string | null;
+
   city?: string | null;
+  state?: string | null;
+  province?: string | null;
+  country?: string | null;
+
   address_line?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  full_address?: string | null;
   landmark?: string | null;
+
   pincode?: string | null;
+  postal_code?: string | null;
+
   vehicle_make_model?: string | null;
   vehicle_year?: string | null;
+
   preferred_date?: string | null;
   preferred_time?: string | null;
+
   notes?: string | null;
   status: BookingStatus;
   created_at?: string | null;
+  updated_at?: string | null;
+
   items?: BookingItem[];
 };
 
@@ -91,6 +109,206 @@ const STATUS_STYLES: Record<BookingStatus, string> = {
   CANCELLED: "border-red-500/25 bg-red-500/10 text-red-100",
   DELIVERED: "border-emerald-500/25 bg-emerald-500/10 text-emerald-100",
 };
+
+/* =========================
+   Helpers
+========================= */
+function asArray<T = any>(v: any): T[] {
+  return Array.isArray(v) ? v : [];
+}
+
+function firstString(...values: any[]): string | null {
+  for (const value of values) {
+    if (value == null) continue;
+
+    if (typeof value === "string") {
+      const s = value.trim();
+      if (s) return s;
+      continue;
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+  }
+  return null;
+}
+
+function firstNumber(...values: any[]): number | null {
+  for (const value of values) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function normalizeStatus(value: any): BookingStatus {
+  const s = String(value || "")
+    .trim()
+    .toUpperCase();
+
+  if (s === "PENDING") return "PENDING";
+  if (s === "CONFIRMED") return "CONFIRMED";
+  if (s === "CANCELLED") return "CANCELLED";
+  if (s === "DELIVERED") return "DELIVERED";
+  return "PENDING";
+}
+
+function normalizeBookingItem(input: any): BookingItem {
+  return {
+    id: input?.id ?? input?.booking_item_id ?? input?.bookingItemId ?? undefined,
+    qty: firstNumber(input?.qty, input?.quantity, input?.booked_qty) ?? 1,
+    tyre_id:
+      firstNumber(input?.tyre_id, input?.tyreId, input?.product_id, input?.id) ??
+      0,
+    brand: firstString(
+      input?.brand,
+      input?.brand_name,
+      input?.tyre_brand,
+      input?.product_brand
+    ),
+    name: firstString(
+      input?.name,
+      input?.title,
+      input?.tyre_name,
+      input?.product_name
+    ),
+    size: firstString(input?.size, input?.tyre_size, input?.product_size),
+    image_url: firstString(
+      input?.image_url,
+      input?.image,
+      input?.thumbnail,
+      input?.photo,
+      input?.tyre_image
+    ),
+    category_title: firstString(
+      input?.category_title,
+      input?.category,
+      input?.category_name
+    ),
+    category_slug: firstString(input?.category_slug, input?.slug),
+  };
+}
+
+function normalizeBooking(input: any): Booking {
+  const customer = input?.customer || input?.user || {};
+  const address = input?.address && typeof input.address === "object" ? input.address : {};
+  const vehicle = input?.vehicle && typeof input.vehicle === "object" ? input.vehicle : {};
+  const schedule = input?.schedule && typeof input.schedule === "object" ? input.schedule : {};
+
+  const combinedVehicle =
+    [firstString(vehicle?.make), firstString(vehicle?.model)]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || null;
+
+  const itemsRaw =
+    input?.items ||
+    input?.booking_items ||
+    input?.bookingItems ||
+    input?.products ||
+    input?.lines ||
+    [];
+
+  return {
+    id: firstNumber(input?.id, input?.booking_id, input?.bookingId) ?? 0,
+    customer_name:
+      firstString(
+        input?.customer_name,
+        input?.name,
+        input?.customerName,
+        customer?.name,
+        customer?.full_name
+      ) || "Unknown Customer",
+
+    phone:
+      firstString(
+        input?.phone,
+        input?.customer_phone,
+        input?.mobile,
+        input?.mobile_no,
+        customer?.phone,
+        customer?.mobile
+      ) || "-",
+
+    email: firstString(
+      input?.email,
+      input?.customer_email,
+      customer?.email
+    ),
+
+    city: firstString(input?.city, address?.city),
+    state: firstString(input?.state, address?.state),
+    province: firstString(input?.province, address?.province),
+    country: firstString(input?.country, address?.country),
+
+    address_line: firstString(input?.address_line),
+    address_line1: firstString(input?.address_line1, address?.address_line1),
+    address_line2: firstString(input?.address_line2, address?.address_line2),
+    full_address: firstString(input?.full_address, address?.full_address),
+    landmark: firstString(input?.landmark, address?.landmark),
+
+    pincode: firstString(input?.pincode, address?.pincode),
+    postal_code: firstString(
+      input?.postal_code,
+      input?.postalCode,
+      address?.postal_code,
+      address?.postalCode
+    ),
+
+    vehicle_make_model:
+      firstString(
+        input?.vehicle_make_model,
+        input?.vehicle_model,
+        input?.vehicle_name
+      ) || combinedVehicle,
+
+    vehicle_year: firstString(input?.vehicle_year, vehicle?.year),
+
+    preferred_date: firstString(
+      input?.preferred_date,
+      input?.booking_date,
+      schedule?.date
+    ),
+    preferred_time: firstString(
+      input?.preferred_time,
+      input?.booking_time,
+      schedule?.time
+    ),
+
+    notes: firstString(input?.notes, input?.remark, input?.message),
+    status: normalizeStatus(input?.status),
+    created_at: firstString(input?.created_at, input?.createdAt),
+    updated_at: firstString(input?.updated_at, input?.updatedAt),
+
+    items: asArray(itemsRaw).map(normalizeBookingItem),
+  };
+}
+
+function normalizeBookingListResponse(json: any): Booking[] {
+  const raw =
+    Array.isArray(json)
+      ? json
+      : Array.isArray(json?.items)
+      ? json.items
+      : Array.isArray(json?.bookings)
+      ? json.bookings
+      : Array.isArray(json?.data)
+      ? json.data
+      : Array.isArray(json?.rows)
+      ? json.rows
+      : [];
+
+  return raw.map(normalizeBooking).filter((x) => Number(x.id) > 0);
+}
+
+function normalizeBookingDetailResponse(json: any): Booking | null {
+  const raw = json?.booking || json?.item || json?.data || json;
+  if (!raw || typeof raw !== "object") return null;
+  const booking = normalizeBooking(raw);
+  if (!booking.id) return null;
+  return booking;
+}
 
 async function apiFetch(path: string, init: RequestInit = {}) {
   const token = readToken();
@@ -160,8 +378,50 @@ function resolveImage(url?: string | null) {
   const u = String(url || "").trim();
   if (!u) return "/tires/tyre-1.jpg";
   if (u.startsWith("http://") || u.startsWith("https://")) return u;
-  if (u.startsWith("/")) return `${API.replace(/\/api$/, "")}${u}`;
-  return `${API.replace(/\/api$/, "")}/${u}`;
+  if (u.startsWith("/")) return `${API_ROOT}${u}`;
+  return `${API_ROOT}/${u}`;
+}
+
+function getShortAddress(b?: Booking | null) {
+  if (!b) return "-";
+
+  const parts = [
+    b.address_line,
+    b.address_line1,
+    b.address_line2,
+    b.landmark,
+    b.city,
+    b.state || b.province,
+    b.pincode || b.postal_code,
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(", ") : b.full_address || "-";
+}
+
+function getFullAddress(b?: Booking | null) {
+  if (!b) return "-";
+
+  const parts = [
+    b.full_address,
+    b.address_line,
+    b.address_line1,
+    b.address_line2,
+    b.landmark ? `Landmark: ${b.landmark}` : null,
+    b.city,
+    b.state || b.province,
+    b.country,
+    b.pincode || b.postal_code,
+  ].filter(Boolean);
+
+  if (!parts.length) return "-";
+
+  const unique: string[] = [];
+  for (const p of parts) {
+    const s = String(p).trim();
+    if (!s) continue;
+    if (!unique.includes(s)) unique.push(s);
+  }
+  return unique.join(", ");
 }
 
 function SummaryCard({
@@ -191,6 +451,7 @@ function SummaryCard({
 export default function AdminBookingsPanel() {
   const [rows, setRows] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedLoading, setSelectedLoading] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
 
   const [q, setQ] = useState("");
@@ -203,6 +464,7 @@ export default function AdminBookingsPanel() {
     message: string;
     open: boolean;
   } | null>(null);
+
   const alertTimerRef = useRef<number | null>(null);
 
   const [changedIds, setChangedIds] = useState<Set<number>>(new Set());
@@ -217,7 +479,9 @@ export default function AdminBookingsPanel() {
       window.clearTimeout(alertTimerRef.current);
       alertTimerRef.current = null;
     }
+
     setAlert({ type, message, open: true });
+
     alertTimerRef.current = window.setTimeout(() => {
       setAlert((a) => (a ? { ...a, open: false } : a));
     }, timeout);
@@ -257,16 +521,17 @@ export default function AdminBookingsPanel() {
       const json = await apiFetch(
         `/bookings${params.toString() ? `?${params.toString()}` : ""}`
       );
-      const list: Booking[] = Array.isArray(json?.items) ? json.items : [];
 
-      setRows(list);
+      setRows(normalizeBookingListResponse(json));
     } catch (err: any) {
       console.error(err);
+
       if (err?.status === 401) {
         showAlert("error", "Unauthorized — please login");
         window.location.href = "/login";
         return;
       }
+
       showAlert("error", err?.message || "Failed to load bookings");
       setRows([]);
     } finally {
@@ -275,13 +540,16 @@ export default function AdminBookingsPanel() {
   }
 
   async function fetchBookingDetails(id: number) {
+    setSelectedLoading(true);
     try {
       const json = await apiFetch(`/bookings/${id}`);
-      return (json?.booking || null) as Booking | null;
+      return normalizeBookingDetailResponse(json);
     } catch (err: any) {
       console.error(err);
       showAlert("error", err?.message || "Failed to load booking details");
       return null;
+    } finally {
+      setSelectedLoading(false);
     }
   }
 
@@ -293,23 +561,23 @@ export default function AdminBookingsPanel() {
     }
 
     setBusyId(id);
+
     try {
       const updatedRes = await apiFetch(`/bookings/${id}/status`, {
         method: "PUT",
         body: JSON.stringify({ status }),
       });
 
-      const updatedBooking: Booking | null = updatedRes?.booking || null;
+      const updatedBooking = normalizeBookingDetailResponse(updatedRes);
 
       showAlert("success", "Booking status updated!");
       flashRow(id);
 
       if (updatedBooking?.id) {
         setRows((prev) =>
-          prev.map((b) =>
-            b.id === updatedBooking.id ? { ...b, ...updatedBooking } : b
-          )
+          prev.map((b) => (b.id === updatedBooking.id ? updatedBooking : b))
         );
+
         setSelected((cur) =>
           cur?.id === updatedBooking.id ? updatedBooking : cur
         );
@@ -317,6 +585,7 @@ export default function AdminBookingsPanel() {
         setRows((prev) =>
           prev.map((b) => (b.id === id ? { ...b, status } : b))
         );
+
         setSelected((cur) => (cur?.id === id ? { ...cur, status } : cur));
       }
     } catch (err: any) {
@@ -332,20 +601,37 @@ export default function AdminBookingsPanel() {
     if (!t) return rows;
 
     return rows.filter((b) => {
+      const itemText = (b.items || [])
+        .map((it) =>
+          [it.brand, it.name, it.size, it.category_title, it.category_slug]
+            .filter(Boolean)
+            .join(" ")
+        )
+        .join(" ");
+
       const hay = [
         b.id,
         b.customer_name,
         b.phone,
         b.email,
         b.city,
+        b.state,
+        b.province,
+        b.country,
         b.address_line,
+        b.address_line1,
+        b.address_line2,
+        b.full_address,
         b.landmark,
         b.pincode,
+        b.postal_code,
         b.vehicle_make_model,
         b.vehicle_year,
         b.status,
         b.preferred_date,
         b.preferred_time,
+        b.notes,
+        itemText,
       ]
         .filter(Boolean)
         .join(" ")
@@ -419,8 +705,8 @@ export default function AdminBookingsPanel() {
                 Bookings Manager
               </h2>
               <p className="mt-1 text-sm text-white/70">
-                View booking requests, inspect booked tires, and update order
-                status.
+                View booking requests, customer phone numbers, full addresses,
+                booked tires, and update booking status.
               </p>
             </div>
 
@@ -460,7 +746,7 @@ export default function AdminBookingsPanel() {
           <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-                <div className="relative w-full sm:w-[380px]">
+                <div className="relative w-full sm:w-[440px]">
                   <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
                   <input
                     value={q}
@@ -468,7 +754,7 @@ export default function AdminBookingsPanel() {
                       setQ(e.target.value);
                       setPage(1);
                     }}
-                    placeholder="Search customer, phone, city, vehicle..."
+                    placeholder="Search customer, phone, address, city, vehicle, item..."
                     className="w-full rounded-2xl border border-white/10 bg-black/30 py-3 pl-11 pr-4 text-sm text-white outline-none focus:border-[#f7c25a]/60 focus:ring-2 focus:ring-[#f7c25a]/20"
                   />
                 </div>
@@ -507,13 +793,13 @@ export default function AdminBookingsPanel() {
             <h3 className="mb-4 text-lg font-extrabold">Bookings</h3>
 
             <div className="overflow-x-auto rounded-2xl border border-white/10">
-              <table className="w-full border-collapse text-sm">
+              <table className="w-full min-w-[1400px] border-collapse text-sm">
                 <thead className="bg-black/30">
                   <tr className="text-left text-white/70">
                     <th className="p-3">ID</th>
                     <th className="p-3">Customer</th>
-                    <th className="p-3">Phone</th>
-                    <th className="p-3">City</th>
+                    <th className="p-3">Contact</th>
+                    <th className="p-3">Address</th>
                     <th className="p-3">Vehicle</th>
                     <th className="p-3">Preferred</th>
                     <th className="p-3">Status</th>
@@ -540,15 +826,15 @@ export default function AdminBookingsPanel() {
                       <tr
                         key={b.id}
                         className={cn(
-                          "border-t border-white/10 transition-all",
+                          "border-t border-white/10 align-top transition-all",
                           changedIds.has(b.id) && "bg-[#f7c25a]/10"
                         )}
                       >
-                        <td className="p-3 align-top font-semibold text-white/90">
+                        <td className="p-3 font-semibold text-white/90">
                           #{b.id}
                         </td>
 
-                        <td className="p-3 align-top">
+                        <td className="p-3">
                           <div className="font-semibold text-white/90">
                             {b.customer_name}
                           </div>
@@ -557,29 +843,34 @@ export default function AdminBookingsPanel() {
                           </div>
                         </td>
 
-                        <td className="p-3 align-top text-white/80">
-                          {b.phone}
+                        <td className="p-3 text-white/80">
+                          <div className="font-medium">{b.phone || "-"}</div>
+                          <div className="mt-1 text-xs text-white/50">
+                            {b.email || "-"}
+                          </div>
                         </td>
 
-                        <td className="p-3 align-top text-white/70">
-                          {b.city || "-"}
+                        <td className="p-3 text-white/70">
+                          <div className="max-w-[320px] whitespace-pre-wrap break-words">
+                            {getShortAddress(b)}
+                          </div>
                         </td>
 
-                        <td className="p-3 align-top text-white/70">
+                        <td className="p-3 text-white/70">
                           <div>{b.vehicle_make_model || "-"}</div>
                           <div className="text-xs text-white/45">
                             {b.vehicle_year || "-"}
                           </div>
                         </td>
 
-                        <td className="p-3 align-top text-white/70">
+                        <td className="p-3 text-white/70">
                           <div>{formatPreferredDate(b.preferred_date)}</div>
                           <div className="text-xs text-white/45">
                             {formatPreferredTime(b.preferred_time)}
                           </div>
                         </td>
 
-                        <td className="p-3 align-top">
+                        <td className="p-3">
                           <select
                             disabled={busyId === b.id}
                             value={b.status}
@@ -602,11 +893,11 @@ export default function AdminBookingsPanel() {
                           </select>
                         </td>
 
-                        <td className="p-3 align-top text-white/60">
+                        <td className="p-3 text-white/60">
                           {prettyDate(b.created_at)}
                         </td>
 
-                        <td className="p-3 align-top">
+                        <td className="p-3">
                           <button
                             onClick={async () => {
                               const full = await fetchBookingDetails(b.id);
@@ -665,7 +956,7 @@ export default function AdminBookingsPanel() {
           >
             <div className="fixed inset-0 bg-black/75" aria-hidden="true" />
             <div className="fixed inset-0 flex items-center justify-center p-4">
-              <Dialog.Panel className="w-full max-w-5xl rounded-3xl border border-white/10 bg-[#0b0b0b] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+              <Dialog.Panel className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-3xl border border-white/10 bg-[#0b0b0b] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
                 {selected && (
                   <>
                     <div className="mb-4 flex items-center justify-between">
@@ -687,20 +978,35 @@ export default function AdminBookingsPanel() {
                       </button>
                     </div>
 
+                    {selectedLoading && (
+                      <div className="mb-4 rounded-2xl border border-[#f7c25a]/20 bg-[#f7c25a]/10 px-4 py-3 text-sm text-[#f7c25a]">
+                        Loading latest booking details...
+                      </div>
+                    )}
+
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                         <div className="mb-3 flex items-center gap-2 text-[#f7c25a]">
-                          <Phone className="h-4 w-4" />
+                          <User className="h-4 w-4" />
                           <span className="text-xs font-bold uppercase tracking-[0.16em]">
                             Customer
                           </span>
                         </div>
+
                         <div className="font-semibold text-white">
                           {selected.customer_name}
                         </div>
-                        <div className="mt-1 text-white/75">{selected.phone}</div>
-                        <div className="mt-1 text-white/60">
-                          {selected.email || "-"}
+
+                        <div className="mt-3 space-y-2 text-sm text-white/80">
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-white/50" />
+                            <span>{selected.phone || "-"}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-white/50" />
+                            <span>{selected.email || "-"}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -711,13 +1017,16 @@ export default function AdminBookingsPanel() {
                             Address
                           </span>
                         </div>
-                        <div className="text-white/80">{selected.city || "-"}</div>
-                        <div className="mt-1 text-white/70">
-                          {selected.address_line || "-"}
+
+                        <div className="whitespace-pre-wrap break-words text-white/80">
+                          {getFullAddress(selected)}
                         </div>
-                        <div className="mt-1 text-white/60">
-                          {selected.landmark || "-"}{" "}
-                          {selected.pincode ? `• ${selected.pincode}` : ""}
+
+                        <div className="mt-3 grid gap-2 text-sm text-white/65 sm:grid-cols-2">
+                          <div>City: {selected.city || "-"}</div>
+                          <div>State/Province: {selected.state || selected.province || "-"}</div>
+                          <div>Postal/Pincode: {selected.pincode || selected.postal_code || "-"}</div>
+                          <div>Country: {selected.country || "-"}</div>
                         </div>
                       </div>
 
@@ -844,8 +1153,9 @@ export default function AdminBookingsPanel() {
                         )}
                       </div>
 
-                      <div className="md:col-span-2 text-xs text-white/40">
-                        Created: {prettyDate(selected.created_at)}
+                      <div className="md:col-span-2 grid gap-3 text-xs text-white/40 sm:grid-cols-2">
+                        <div>Created: {prettyDate(selected.created_at)}</div>
+                        <div>Updated: {prettyDate(selected.updated_at)}</div>
                       </div>
                     </div>
 

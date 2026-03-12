@@ -32,14 +32,6 @@ function safeNumber(v: any, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function formatINR(n: number) {
-  try {
-    return n.toLocaleString("en-IN");
-  } catch {
-    return String(n);
-  }
-}
-
 function normalizeImage(url: string) {
   const u = String(url || "").trim();
   if (!u) return "/tires/tyre-1.jpg";
@@ -129,10 +121,8 @@ function TextArea(
 
 function FloatingCartButton({
   totalQty,
-  subtotal,
 }: {
   totalQty: number;
-  subtotal: number;
 }) {
   return (
     <Link
@@ -157,10 +147,10 @@ function FloatingCartButton({
             </div>
             <div className="mt-0.5 flex items-center gap-2">
               <span className="truncate text-sm font-black text-white sm:text-base">
-                ₹ {formatINR(subtotal)}
+                {totalQty} item{totalQty > 1 ? "s" : ""}
               </span>
               <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/70">
-                {totalQty} item{totalQty > 1 ? "s" : ""}
+                Review Cart
               </span>
             </div>
           </div>
@@ -176,7 +166,7 @@ function FloatingCartButton({
 
 export default function BookPageClient() {
   const router = useRouter();
-  const { items, subtotal, clear } = useCart();
+  const { items, clear } = useCart();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -210,20 +200,6 @@ export default function BookPageClient() {
     setIsLoggedIn(true);
     setCheckingAuth(false);
   }, [router]);
-
-  const pricedSubtotal = useMemo(() => {
-    return items.reduce((sum: number, it: any) => {
-      const price = safeNumber(it?.price, 0);
-      const qty = Math.max(1, safeNumber(it?.qty, 1));
-      return price > 0 ? sum + price * qty : sum;
-    }, 0);
-  }, [items]);
-
-  const hasMissingPrice = useMemo(() => {
-    return items.some((it: any) => !(safeNumber(it?.price, 0) > 0));
-  }, [items]);
-
-  const displaySubtotal = hasMissingPrice ? pricedSubtotal : subtotal;
 
   const totalQty = useMemo(() => {
     return items.reduce(
@@ -533,12 +509,10 @@ export default function BookPageClient() {
                   cart.
                 </p>
 
-                {hasMissingPrice ? (
-                  <div className="mt-4 rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/8 px-4 py-3 text-sm text-[#f7c25a]">
-                    Some items are missing price. You can still place the
-                    booking, and our team will confirm the final amount with you.
-                  </div>
-                ) : null}
+                <div className="mt-4 rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/8 px-4 py-3 text-sm text-[#f7c25a]">
+                  Prices are hidden. Our team will confirm all order details
+                  with you after reviewing your request.
+                </div>
 
                 {items.length === 0 ? (
                   <div className="mt-6 rounded-[28px] border border-white/10 bg-black/25 p-6">
@@ -571,8 +545,6 @@ export default function BookPageClient() {
                     {items.map((it: any) => {
                       const title = `${it?.brand ? `${it.brand} ` : ""}${it?.name || "Tyre"}`;
                       const qty = Math.max(1, safeNumber(it?.qty, 1));
-                      const price = safeNumber(it?.price, 0);
-                      const lineTotal = price > 0 ? price * qty : 0;
                       const image = normalizeImage(
                         it?.image || it?.image_url || ""
                       );
@@ -610,24 +582,18 @@ export default function BookPageClient() {
                                   Qty: {qty}
                                 </span>
 
-                                {price > 0 ? (
-                                  <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
-                                    ₹ {formatINR(price)} each
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
-                                    Price to be confirmed
-                                  </span>
-                                )}
+                                <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
+                                  Price hidden
+                                </span>
                               </div>
                             </div>
 
                             <div className="md:text-right">
                               <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
-                                Line Total
+                                Status
                               </div>
                               <div className="mt-1 text-lg font-black text-white">
-                                {price > 0 ? `₹ ${formatINR(lineTotal)}` : "—"}
+                                Ready
                               </div>
                             </div>
                           </div>
@@ -698,9 +664,9 @@ export default function BookPageClient() {
                       </div>
 
                       <div className="flex items-center justify-between text-white/80">
-                        <span>Subtotal</span>
+                        <span>Pricing</span>
                         <span className="font-bold text-white">
-                          ₹ {formatINR(displaySubtotal)}
+                          Hidden
                         </span>
                       </div>
 
@@ -745,7 +711,7 @@ export default function BookPageClient() {
       </main>
 
       {!success && items.length > 0 ? (
-        <FloatingCartButton totalQty={totalQty} subtotal={displaySubtotal} />
+        <FloatingCartButton totalQty={totalQty} />
       ) : null}
     </>
   );

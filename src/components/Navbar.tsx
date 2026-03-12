@@ -112,6 +112,7 @@ export default function Navbar() {
     const syncAuth = () => {
       const token = readStoredToken();
       const storedUser = readStoredUser();
+
       if (token && storedUser) {
         setUser(storedUser);
       } else {
@@ -123,10 +124,12 @@ export default function Navbar() {
 
     window.addEventListener("storage", syncAuth);
     window.addEventListener("auth-changed", syncAuth as EventListener);
+    window.addEventListener("auth", syncAuth as EventListener);
 
     return () => {
       window.removeEventListener("storage", syncAuth);
       window.removeEventListener("auth-changed", syncAuth as EventListener);
+      window.removeEventListener("auth", syncAuth as EventListener);
     };
   }, []);
 
@@ -194,6 +197,7 @@ export default function Navbar() {
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("auth-changed"));
+      window.dispatchEvent(new Event("auth"));
     }
 
     router.push("/login");

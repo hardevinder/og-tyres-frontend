@@ -4,11 +4,27 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 
-function formatINR(n: number) {
+type CartItem = {
+  id: string;
+  name?: string;
+  brand?: string;
+  size?: string;
+  variant?: string;
+  image?: string;
+  category?: string;
+  price?: number;
+  qty?: number;
+};
+
+function formatUSD(n: number) {
   try {
-    return n.toLocaleString("en-IN");
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(n);
   } catch {
-    return String(n);
+    return `$${String(n)}`;
   }
 }
 
@@ -24,18 +40,30 @@ function categoryLabel(cat?: string) {
 }
 
 export default function CartPage() {
-  const { items, subtotal, updateQty, removeItem, clear } = useCart();
+  const { items, subtotal, updateQty, removeItem, clear } = useCart() as {
+    items: CartItem[];
+    subtotal: number;
+    updateQty: (id: string, variant?: string, qty?: number) => void;
+    removeItem: (id: string, variant?: string) => void;
+    clear: () => void;
+  };
 
-  const hasMissingPrice = items.some((it: any) => !(Number(it.price) > 0));
+  const safeItems = Array.isArray(items) ? items : [];
 
-  const pricedSubtotal = items.reduce((sum: number, it: any) => {
+  const hasVisiblePrices = false;
+
+  const hasMissingPrice = safeItems.some((it) => !(Number(it.price) > 0));
+
+  const pricedSubtotal = safeItems.reduce((sum: number, it) => {
     const price = Number(it.price) || 0;
     const qty = Number(it.qty) || 0;
     if (price > 0) return sum + price * qty;
     return sum;
   }, 0);
 
-  const displaySubtotal = hasMissingPrice ? pricedSubtotal : subtotal;
+  const displaySubtotal = hasMissingPrice
+    ? pricedSubtotal
+    : Number(subtotal || 0);
 
   return (
     <main className="min-h-screen bg-[#050505] text-white">
@@ -61,7 +89,12 @@ export default function CartPage() {
                 Review selected tires, update quantities, then proceed to book.
               </p>
 
-              {hasMissingPrice ? (
+              {!hasVisiblePrices ? (
+                <div className="mt-3 text-sm text-[#f7c25a]/90">
+                  Prices are hidden. You can still review your selected items
+                  and continue.
+                </div>
+              ) : hasMissingPrice ? (
                 <div className="mt-3 text-sm text-[#f7c25a]/90">
                   Some items are missing price, but you can still continue to
                   the booking page.
@@ -69,7 +102,7 @@ export default function CartPage() {
               ) : null}
             </div>
 
-            {items.length > 0 ? (
+            {safeItems.length > 0 ? (
               <button
                 onClick={clear}
                 className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10"
@@ -89,7 +122,7 @@ export default function CartPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10">
-        {items.length === 0 ? (
+        {safeItems.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-white/5 p-8 md:p-10">
             <div className="text-xl font-extrabold text-white">
               Cart is empty
@@ -139,15 +172,16 @@ export default function CartPage() {
         ) : (
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-4 lg:col-span-2">
-              {items.map((it: any) => {
+              {safeItems.map((it) => {
                 const hasPrice = Number(it.price) > 0;
-                const qty = Number(it.qty) || 1;
+                const qty = Math.max(1, Number(it.qty) || 1);
                 const lineTotal = hasPrice ? Number(it.price) * qty : 0;
                 const title = `${it.brand ? `${it.brand} ` : ""}${it.name || "Tire"}`;
+                const itemVariant = it.variant || it.size || "";
 
                 return (
                   <div
-                    key={`${it.id}-${it.variant || it.size || ""}`}
+                    key={`${it.id}-${itemVariant}`}
                     className="rounded-3xl border border-white/10 bg-white/5 p-5 transition hover:bg-white/10"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row">
@@ -161,7 +195,11 @@ export default function CartPage() {
                               height={96}
                               className="h-full w-full object-contain p-3"
                             />
-                          ) : null}
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-black/60">
+                              No Image
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -191,20 +229,22 @@ export default function CartPage() {
                                 </span>
                               ) : null}
 
-                              {hasPrice ? (
-                                <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
-                                  ₹ {formatINR(Number(it.price))} each
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-3 py-1 text-xs font-extrabold text-[#f7c25a]">
-                                  Price not added
-                                </span>
-                              )}
+                              {hasVisiblePrices ? (
+                                hasPrice ? (
+                                  <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
+                                    {formatUSD(Number(it.price))} each
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-3 py-1 text-xs font-extrabold text-[#f7c25a]">
+                                    Price not added
+                                  </span>
+                                )
+                              ) : null}
                             </div>
                           </div>
 
                           <button
-                            onClick={() => removeItem(it.id, it.variant)}
+                            onClick={() => removeItem(it.id, itemVariant)}
                             className="rounded-2xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-semibold text-white/80 transition hover:bg-black/30 hover:text-white"
                           >
                             Remove
@@ -215,7 +255,7 @@ export default function CartPage() {
                           <div className="inline-flex items-center rounded-2xl border border-white/10 bg-black/20">
                             <button
                               onClick={() =>
-                                updateQty(it.id, it.variant, qty - 1)
+                                updateQty(it.id, itemVariant, Math.max(1, qty - 1))
                               }
                               className="h-10 w-10 rounded-l-2xl text-white transition hover:bg-white/5"
                               aria-label="Decrease quantity"
@@ -228,8 +268,8 @@ export default function CartPage() {
                               onChange={(e) =>
                                 updateQty(
                                   it.id,
-                                  it.variant,
-                                  Number(e.target.value)
+                                  itemVariant,
+                                  Math.max(1, Number(e.target.value) || 1)
                                 )
                               }
                               className="h-10 w-16 bg-transparent text-center text-sm font-semibold text-white outline-none"
@@ -238,7 +278,7 @@ export default function CartPage() {
 
                             <button
                               onClick={() =>
-                                updateQty(it.id, it.variant, qty + 1)
+                                updateQty(it.id, itemVariant, qty + 1)
                               }
                               className="h-10 w-10 rounded-r-2xl text-white transition hover:bg-white/5"
                               aria-label="Increase quantity"
@@ -247,17 +287,25 @@ export default function CartPage() {
                             </button>
                           </div>
 
-                          <div className="ml-auto text-sm text-white/70">
-                            Line total
-                          </div>
+                          {hasVisiblePrices ? (
+                            <>
+                              <div className="ml-auto text-sm text-white/70">
+                                Line total
+                              </div>
 
-                          {hasPrice ? (
-                            <div className="text-lg font-extrabold text-white">
-                              ₹ {formatINR(lineTotal)}
-                            </div>
+                              {hasPrice ? (
+                                <div className="text-lg font-extrabold text-white">
+                                  {formatUSD(lineTotal)}
+                                </div>
+                              ) : (
+                                <div className="text-sm font-extrabold text-[#f7c25a]">
+                                  —
+                                </div>
+                              )}
+                            </>
                           ) : (
-                            <div className="text-sm font-extrabold text-[#f7c25a]">
-                              —
+                            <div className="ml-auto text-sm font-semibold text-white/60">
+                              Qty: {qty}
                             </div>
                           )}
                         </div>
@@ -290,15 +338,15 @@ export default function CartPage() {
                   Order Summary
                 </div>
                 <div className="text-xs text-white/60">
-                  Taxes extra (if applicable)
+                  Review your items
                 </div>
               </div>
 
               <div className="mt-5 space-y-3 text-sm">
                 <div className="flex justify-between text-white/80">
-                  <span>Subtotal</span>
+                  <span>Items</span>
                   <span className="text-white">
-                    ₹ {formatINR(displaySubtotal)}
+                    {safeItems.reduce((sum, it) => sum + (Number(it.qty) || 0), 0)}
                   </span>
                 </div>
 
@@ -308,17 +356,26 @@ export default function CartPage() {
                 </div>
 
                 <div className="flex justify-between text-white/70">
-                  <span>Discount</span>
-                  <span className="text-white/80">—</span>
+                  <span>Status</span>
+                  <span className="text-white/80">Ready to proceed</span>
                 </div>
+
+                {hasVisiblePrices ? (
+                  <div className="flex justify-between text-white/80">
+                    <span>Subtotal</span>
+                    <span className="text-white">
+                      {formatUSD(displaySubtotal)}
+                    </span>
+                  </div>
+                ) : null}
               </div>
 
               <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-5">
                 <span className="text-sm font-semibold text-white/80">
-                  Total
+                  {hasVisiblePrices ? "Total" : "Selected Items"}
                 </span>
                 <span className="text-2xl font-extrabold text-white">
-                  ₹ {formatINR(displaySubtotal)}
+                  {safeItems.reduce((sum, it) => sum + (Number(it.qty) || 0), 0)}
                 </span>
               </div>
 

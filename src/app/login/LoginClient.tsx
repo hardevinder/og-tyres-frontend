@@ -41,11 +41,10 @@ function isAdminUser(u: any) {
 function sanitizeRedirect(raw: string | null) {
   const r = (raw || "").trim();
 
-  if (!r) return "/admin";
-  if (!r.startsWith("/")) return "/admin";
-
+  if (!r) return "/";
+  if (!r.startsWith("/")) return "/";
   const base = r.split("?")[0].split("#")[0];
-  if (base === "/login" || base === "/signup") return "/admin";
+  if (base === "/login" || base === "/signup" || base === "/register") return "/";
 
   return r;
 }
@@ -54,6 +53,8 @@ function clearAuth() {
   try {
     localStorage.removeItem("accessToken");
     sessionStorage.removeItem("accessToken");
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     localStorage.removeItem("user");
     sessionStorage.removeItem("user");
   } catch {}
@@ -64,7 +65,13 @@ function extractUser(data: any) {
 }
 
 function extractToken(data: any) {
-  return data?.token || data?.accessToken || data?.data?.token || data?.data?.accessToken || null;
+  return (
+    data?.token ||
+    data?.accessToken ||
+    data?.data?.token ||
+    data?.data?.accessToken ||
+    null
+  );
 }
 
 export default function LoginClient() {
@@ -98,12 +105,13 @@ export default function LoginClient() {
 
   function notifyAuthChange() {
     try {
+      window.dispatchEvent(new Event("auth-changed"));
       window.dispatchEvent(new Event("auth"));
       localStorage.setItem("auth_update", String(Date.now()));
     } catch {}
   }
 
-  async function fetchAndStoreUser(token: string) {
+  async function fetchAndStoreUser(token: string, rememberChoice: boolean) {
     try {
       const meUrl = API ? `${API}/auth/me` : "/api/auth/me";
       const res = await fetch(meUrl, {
@@ -117,7 +125,13 @@ export default function LoginClient() {
       const userObj = meData?.user || meData?.data?.user || meData?.data || meData;
 
       if (userObj) {
-        localStorage.setItem("user", JSON.stringify(userObj));
+        if (rememberChoice) {
+          localStorage.setItem("user", JSON.stringify(userObj));
+          sessionStorage.removeItem("user");
+        } else {
+          sessionStorage.setItem("user", JSON.stringify(userObj));
+          localStorage.removeItem("user");
+        }
         return userObj;
       }
 
@@ -159,25 +173,56 @@ export default function LoginClient() {
         return;
       }
 
-      if (remember) localStorage.setItem("accessToken", token);
-      else sessionStorage.setItem("accessToken", token);
+      if (remember) {
+        localStorage.setItem("accessToken", token);
+        localStorage.setItem("token", token);
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("token");
+      } else {
+        sessionStorage.setItem("accessToken", token);
+        sessionStorage.setItem("token", token);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("token");
+      }
 
       let user = extractUser(data);
 
       if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
+        if (remember) {
+          localStorage.setItem("user", JSON.stringify(user));
+          sessionStorage.removeItem("user");
+        } else {
+          sessionStorage.setItem("user", JSON.stringify(user));
+          localStorage.removeItem("user");
+        }
       } else {
-        user = await fetchAndStoreUser(token);
+        user = await fetchAndStoreUser(token, remember);
       }
 
       notifyAuthChange();
 
       if (isAdminUser(user)) {
         router.replace("/admin");
+        router.refresh();
+
+        setTimeout(() => {
+          if (typeof window !== "undefined") {
+            window.location.href = "/admin";
+          }
+        }, 50);
         return;
       }
 
-      router.replace(redirectTo || "/");
+      const target = redirectTo || "/";
+
+      router.replace(target);
+      router.refresh();
+
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          window.location.href = target;
+        }
+      }, 50);
     } catch (err: any) {
       setError(err?.message || "Network error");
     } finally {
