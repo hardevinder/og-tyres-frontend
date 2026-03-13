@@ -394,9 +394,14 @@ function getToken() {
 
 function formatPrice(n: number) {
   try {
-    return n.toLocaleString("en-IN");
+    return new Intl.NumberFormat("en-CA", {
+      style: "currency",
+      currency: "CAD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(n || 0));
   } catch {
-    return String(n);
+    return `CAD ${Number(n || 0).toFixed(2)}`;
   }
 }
 
@@ -433,7 +438,7 @@ function FloatingCartButton({
             <div className="mt-0.5 flex items-center gap-2">
               <span className="truncate text-sm font-black text-white sm:text-base">
                 {subtotal > 0
-                  ? `₹ ${formatPrice(subtotal)}`
+                  ? formatPrice(subtotal)
                   : `${cartCount} item${cartCount > 1 ? "s" : ""}`}
               </span>
               <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/70">
@@ -851,7 +856,7 @@ export default function ProductsPage() {
 
                     {p.hasPrice ? (
                       <p className="mt-2 text-sm font-bold text-[#f7c25a]">
-                        ₹ {formatPrice(Number(p.price || 0))}
+                        {formatPrice(Number(p.price || 0))}
                       </p>
                     ) : (
                       <p className="mt-2 text-sm font-medium text-white/50">
