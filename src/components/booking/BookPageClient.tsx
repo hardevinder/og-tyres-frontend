@@ -32,6 +32,22 @@ function safeNumber(v: any, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function formatCAD(n: number) {
+  const value = safeNumber(n, 0);
+
+  try {
+    return new Intl.NumberFormat("en-CA", {
+      style: "currency",
+      currency: "CAD",
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    return `$${value.toFixed(2)}`;
+  }
+}
+
 function normalizeImage(url: string) {
   const u = String(url || "").trim();
   if (!u) return "/tires/tyre-1.jpg";
@@ -119,11 +135,7 @@ function TextArea(
   );
 }
 
-function FloatingCartButton({
-  totalQty,
-}: {
-  totalQty: number;
-}) {
+function FloatingCartButton({ totalQty }: { totalQty: number }) {
   return (
     <Link
       href="/cart"
@@ -206,6 +218,14 @@ export default function BookPageClient() {
       (sum: number, it: any) => sum + Math.max(1, safeNumber(it?.qty, 1)),
       0
     );
+  }, [items]);
+
+  const cartSubtotal = useMemo(() => {
+    return items.reduce((sum: number, it: any) => {
+      const qty = Math.max(1, safeNumber(it?.qty, 1));
+      const price = safeNumber(it?.price, 0);
+      return sum + price * qty;
+    }, 0);
   }, [items]);
 
   const validPayloadItems = useMemo(() => {
@@ -339,11 +359,26 @@ export default function BookPageClient() {
 
   if (success) {
     const booked = success?.id || success?.booking?.id;
-    const successItems = submittedItems.length ? submittedItems : items;
+    const successItems =
+      Array.isArray(success?.items) && success.items.length
+        ? success.items
+        : submittedItems.length
+          ? submittedItems
+          : items;
+
     const successQty = successItems.reduce(
       (sum: number, it: any) => sum + Math.max(1, safeNumber(it?.qty, 1)),
       0
     );
+
+    const successTotal =
+      safeNumber(success?.total_price, 0) ||
+      successItems.reduce((sum: number, it: any) => {
+        const qty = Math.max(1, safeNumber(it?.qty, 1));
+        const lineTotal = safeNumber(it?.line_total, NaN);
+        if (Number.isFinite(lineTotal)) return sum + lineTotal;
+        return sum + safeNumber(it?.price, 0) * qty;
+      }, 0);
 
     return (
       <main className="min-h-screen bg-[#050505] text-white">
@@ -375,7 +410,7 @@ export default function BookPageClient() {
                 ) : null}
               </div>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="mt-8 grid gap-4 sm:grid-cols-4">
                 <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
                   <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
                     Products
@@ -396,10 +431,21 @@ export default function BookPageClient() {
 
                 <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
                   <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
+                    Order Total
+                  </div>
+                  <div className="mt-1 text-lg font-black text-[#f7c25a]">
+                    {formatCAD(successTotal)}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">
                     Status
                   </div>
                   <div className="mt-1 text-lg font-black text-[#f7c25a]">
-                    Pending
+                    {String(success?.status || "PENDING").replace(/^./, (m) =>
+                      m.toUpperCase()
+                    )}
                   </div>
                 </div>
               </div>
@@ -416,6 +462,11 @@ export default function BookPageClient() {
                     const image = normalizeImage(
                       it?.image || it?.image_url || ""
                     );
+                    const price = safeNumber(it?.price, 0);
+                    const rawLineTotal = safeNumber(it?.line_total, NaN);
+                    const lineTotal = Number.isFinite(rawLineTotal)
+                      ? rawLineTotal
+                      : price * qty;
 
                     return (
                       <div
@@ -439,9 +490,20 @@ export default function BookPageClient() {
                             Size: {it?.size || "—"}
                           </div>
                           <div className="mt-1 text-sm text-white/70">
-                            Category: {categoryLabel(
-                              it?.category || it?.category_slug || it?.category_title
+                            Category:{" "}
+                            {categoryLabel(
+                              it?.category ||
+                                it?.category_slug ||
+                                it?.category_title
                             )}
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-semibold text-white/75">
+                              Unit Price: {formatCAD(price)}
+                            </span>
+                            <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
+                              Line Total: {formatCAD(lineTotal)}
+                            </span>
                           </div>
                         </div>
 
@@ -510,8 +572,8 @@ export default function BookPageClient() {
                 </p>
 
                 <div className="mt-4 rounded-2xl border border-[#f7c25a]/25 bg-[#f7c25a]/8 px-4 py-3 text-sm text-[#f7c25a]">
-                  Prices are hidden. Our team will confirm all order details
-                  with you after reviewing your request.
+                  Prices shown below are in Canadian Dollars and will be
+                  confirmed again by our team after order review.
                 </div>
 
                 {items.length === 0 ? (
@@ -542,16 +604,18 @@ export default function BookPageClient() {
                   </div>
                 ) : (
                   <div className="mt-6 space-y-4">
-                    {items.map((it: any) => {
+                    {items.map((it: any, idx: number) => {
                       const title = `${it?.brand ? `${it.brand} ` : ""}${it?.name || "Tyre"}`;
                       const qty = Math.max(1, safeNumber(it?.qty, 1));
                       const image = normalizeImage(
                         it?.image || it?.image_url || ""
                       );
+                      const price = safeNumber(it?.price, 0);
+                      const lineTotal = price * qty;
 
                       return (
                         <div
-                          key={`${it?.id}-${it?.variant || it?.size || ""}`}
+                          key={`${it?.id || idx}-${it?.variant || it?.size || ""}`}
                           className="rounded-[28px] border border-white/10 bg-black/25 p-4"
                         >
                           <div className="grid gap-4 md:grid-cols-[110px_1fr_auto]">
@@ -574,7 +638,12 @@ export default function BookPageClient() {
                               </div>
 
                               <div className="mt-1 text-sm text-white/75">
-                                Category: {categoryLabel(it?.category)}
+                                Category:{" "}
+                                {categoryLabel(
+                                  it?.category ||
+                                    it?.category_slug ||
+                                    it?.category_title
+                                )}
                               </div>
 
                               <div className="mt-2 flex flex-wrap gap-2">
@@ -583,7 +652,11 @@ export default function BookPageClient() {
                                 </span>
 
                                 <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
-                                  Price hidden
+                                  Unit: {formatCAD(price)}
+                                </span>
+
+                                <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-semibold text-white/75">
+                                  Total: {formatCAD(lineTotal)}
                                 </span>
                               </div>
                             </div>
@@ -664,9 +737,9 @@ export default function BookPageClient() {
                       </div>
 
                       <div className="flex items-center justify-between text-white/80">
-                        <span>Pricing</span>
+                        <span>Subtotal</span>
                         <span className="font-bold text-white">
-                          Hidden
+                          {formatCAD(cartSubtotal)}
                         </span>
                       </div>
 

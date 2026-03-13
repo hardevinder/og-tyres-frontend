@@ -41,11 +41,19 @@ function safeNumber(v: any, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function formatINR(n: number) {
+function formatCAD(n: number) {
+  const value = safeNumber(n, 0);
+
   try {
-    return n.toLocaleString("en-IN");
+    return new Intl.NumberFormat("en-CA", {
+      style: "currency",
+      currency: "CAD",
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   } catch {
-    return String(n);
+    return `$${value.toFixed(2)}`;
   }
 }
 
@@ -56,7 +64,7 @@ function formatDate(value: any) {
   if (Number.isNaN(d.getTime())) return String(value);
 
   try {
-    return d.toLocaleString("en-IN", {
+    return d.toLocaleString("en-CA", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -111,7 +119,7 @@ function statusClasses(status: string) {
 
 function statusLabel(status: string) {
   const s = normalizeStatus(status);
-  if (!s) return "PENDING";
+  if (!s) return "Pending";
   return s.charAt(0) + s.slice(1).toLowerCase();
 }
 
@@ -129,9 +137,15 @@ function extractItems(booking: any): any[] {
 }
 
 function bookingSubtotal(booking: any) {
+  const directTotal = safeNumber(booking?.total_price, 0);
+  if (directTotal > 0) return directTotal;
+
   const items = extractItems(booking);
 
   return items.reduce((sum: number, it: any) => {
+    const lineTotal = safeNumber(it?.line_total, NaN);
+    if (Number.isFinite(lineTotal)) return sum + lineTotal;
+
     const price =
       safeNumber(it?.price, 0) ||
       safeNumber(it?.unit_price, 0) ||
@@ -143,6 +157,10 @@ function bookingSubtotal(booking: any) {
 }
 
 function bookingQty(booking: any) {
+  if (safeNumber(booking?.item_count, 0) > 0 && !extractItems(booking).length) {
+    return safeNumber(booking?.item_count, 0);
+  }
+
   const items = extractItems(booking);
   return items.reduce(
     (sum: number, it: any) => sum + Math.max(1, safeNumber(it?.qty, 1)),
@@ -366,7 +384,7 @@ export default function MyBookingsPage() {
                 Known Amount
               </div>
               <div className="mt-1 text-2xl font-black text-[#f7c25a]">
-                ₹ {formatINR(summary.totalAmount)}
+                {formatCAD(summary.totalAmount)}
               </div>
             </div>
           </div>
@@ -475,7 +493,7 @@ export default function MyBookingsPage() {
                               Products
                             </div>
                             <div className="mt-1 text-sm font-bold text-white">
-                              {orderItems.length}
+                              {orderItems.length || safeNumber(booking?.item_count, 0)}
                             </div>
                           </div>
 
@@ -493,7 +511,7 @@ export default function MyBookingsPage() {
                               Amount
                             </div>
                             <div className="mt-1 text-sm font-bold text-[#f7c25a]">
-                              {subtotal > 0 ? `₹ ${formatINR(subtotal)}` : "To confirm"}
+                              {subtotal > 0 ? formatCAD(subtotal) : "To confirm"}
                             </div>
                           </div>
                         </div>
@@ -538,6 +556,10 @@ export default function MyBookingsPage() {
                                 safeNumber(it?.price, 0) ||
                                 safeNumber(it?.unit_price, 0) ||
                                 safeNumber(it?.selling_price, 0);
+                              const rawLineTotal = safeNumber(it?.line_total, NaN);
+                              const lineTotal = Number.isFinite(rawLineTotal)
+                                ? rawLineTotal
+                                : price * qty;
                               const image = normalizeImage(
                                 it?.image || it?.image_url || ""
                               );
@@ -566,7 +588,12 @@ export default function MyBookingsPage() {
                                     </div>
 
                                     <div className="mt-1 text-sm text-white/70">
-                                      Category: {categoryLabel(it?.category)}
+                                      Category:{" "}
+                                      {categoryLabel(
+                                        it?.category ||
+                                          it?.category_slug ||
+                                          it?.category_title
+                                      )}
                                     </div>
 
                                     <div className="mt-2 flex flex-wrap gap-2">
@@ -576,7 +603,7 @@ export default function MyBookingsPage() {
 
                                       {price > 0 ? (
                                         <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
-                                          ₹ {formatINR(price)} each
+                                          {formatCAD(price)} each
                                         </span>
                                       ) : (
                                         <span className="inline-flex items-center rounded-full border border-[#f7c25a]/35 bg-[#f7c25a]/10 px-3 py-1 text-xs font-semibold text-[#f7c25a]">
@@ -591,7 +618,7 @@ export default function MyBookingsPage() {
                                       Line Total
                                     </div>
                                     <div className="mt-1 text-lg font-black text-white">
-                                      {price > 0 ? `₹ ${formatINR(price * qty)}` : "—"}
+                                      {price > 0 ? formatCAD(lineTotal) : "—"}
                                     </div>
                                   </div>
                                 </div>
