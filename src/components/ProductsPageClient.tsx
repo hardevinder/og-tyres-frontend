@@ -1,10 +1,17 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ShoppingCart, ArrowRight } from "lucide-react";
+import {
+  ShoppingCart,
+  ArrowRight,
+  Search,
+  X,
+  ChevronDown,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 /* =========================
@@ -405,6 +412,236 @@ function formatPrice(n: number) {
   }
 }
 
+function formatSizeLabel(size: string) {
+  if (!size || size === "all") return "All Sizes";
+  return size;
+}
+
+/* =========================
+   Fancy Toolbar
+========================= */
+function ProductToolbar({
+  search,
+  setSearch,
+  selectedSize,
+  setSelectedSize,
+  availableSizes,
+  activeCategoryLabel,
+}: {
+  search: string;
+  setSearch: React.Dispatch<React.SetStateAction<string>>;
+  selectedSize: string;
+  setSelectedSize: React.Dispatch<React.SetStateAction<string>>;
+  availableSizes: string[];
+  activeCategoryLabel: string;
+}) {
+  const [sizeOpen, setSizeOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setSizeOpen(false);
+  }, [selectedSize, activeCategoryLabel]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (!dropdownRef.current) return;
+      if (!dropdownRef.current.contains(e.target as Node)) {
+        setSizeOpen(false);
+      }
+    }
+
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") setSizeOpen(false);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  const hasActiveFilters = !!search.trim() || selectedSize !== "all";
+
+  return (
+    <div className="mb-8">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(247,194,90,0.12),rgba(255,255,255,0.03)_30%,rgba(255,255,255,0.02)_100%)] p-[1px] shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+          <div className="relative rounded-[27px] bg-[#0c0c0c]/95 px-4 py-4 sm:px-5">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(247,194,90,0.12),transparent_35%)]" />
+
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#f7c25a]/20 bg-[#f7c25a]/10 text-[#f7c25a]">
+                <Search className="h-5 w-5" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-white/45">
+                  Smart Search
+                </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={`Search ${activeCategoryLabel.toLowerCase()} by brand, model, size...`}
+                  className="h-11 w-full border-0 bg-transparent pr-10 text-sm font-semibold text-white outline-none placeholder:text-white/30"
+                />
+              </div>
+
+              {search.trim() ? (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-white/70 transition hover:bg-white/[0.1] hover:text-white"
+                  aria-label="Clear search"
+                  title="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
+
+            <div className="relative mt-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/60">
+                Search by name
+              </span>
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/60">
+                Brand
+              </span>
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/60">
+                Size
+              </span>
+              {hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedSize("all");
+                  }}
+                  className="ml-auto rounded-full border border-[#f7c25a]/30 bg-[#f7c25a]/10 px-3 py-1 text-[11px] font-bold text-[#f7c25a] transition hover:bg-[#f7c25a]/15"
+                >
+                  Clear All
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div ref={dropdownRef} className="relative">
+          <div className="relative overflow-visible rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(247,194,90,0.08))] p-[1px] shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
+            <div className="rounded-[27px] bg-[#0c0c0c]/95 p-3">
+              <div className="mb-2 flex items-center gap-2 px-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-[#f7c25a]/20 bg-[#f7c25a]/10 text-[#f7c25a]">
+                  <SlidersHorizontal className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">
+                    Size Filter
+                  </div>
+                  <div className="text-sm font-semibold text-white/85">
+                    Choose tyre size
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSizeOpen((s) => !s)}
+                className="group flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-left transition hover:bg-white/[0.07]"
+                aria-haspopup="listbox"
+                aria-expanded={sizeOpen}
+              >
+                <div className="min-w-0">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
+                    Selected
+                  </div>
+                  <div className="mt-1 truncate text-sm font-extrabold text-white">
+                    {formatSizeLabel(selectedSize)}
+                  </div>
+                </div>
+
+                <div className="ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/70">
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      sizeOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </div>
+              </button>
+
+              <div className="mt-2 px-2 text-[11px] text-white/45">
+                {availableSizes.length - 1 > 0
+                  ? `${availableSizes.length - 1} size options available`
+                  : "No sizes available"}
+              </div>
+            </div>
+          </div>
+
+          {sizeOpen ? (
+            <div className="absolute right-0 top-[calc(100%+12px)] z-30 w-full overflow-hidden rounded-[24px] border border-white/10 bg-[#0b0b0b]/98 shadow-[0_25px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+              <div className="border-b border-white/10 bg-[linear-gradient(135deg,rgba(247,194,90,0.12),rgba(255,255,255,0.02))] px-4 py-3">
+                <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#f7c25a]">
+                  Filter by size
+                </div>
+                <div className="mt-1 text-sm font-semibold text-white/80">
+                  Pick one option
+                </div>
+              </div>
+
+              <div
+                className="max-h-72 overflow-y-auto p-2"
+                role="listbox"
+                aria-label="Size filter options"
+              >
+                {availableSizes.map((size) => {
+                  const active = selectedSize === size;
+
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => {
+                        setSelectedSize(size);
+                        setSizeOpen(false);
+                      }}
+                      className={`mb-1 flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition ${
+                        active
+                          ? "border border-[#f7c25a]/30 bg-[#f7c25a]/12 text-[#f7c25a]"
+                          : "border border-transparent bg-white/[0.03] text-white/80 hover:bg-white/[0.07]"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-bold">
+                          {formatSizeLabel(size)}
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-white/40">
+                          {size === "all"
+                            ? "Show every available tyre"
+                            : "Show tyres in this size"}
+                        </div>
+                      </div>
+
+                      {active ? (
+                        <span className="rounded-full border border-[#f7c25a]/25 bg-[#f7c25a]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em]">
+                          Active
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FloatingCartButton({
   cartCount,
   subtotal,
@@ -468,6 +705,8 @@ export default function ProductsPage() {
   };
 
   const [activeCat, setActiveCat] = useState<string>(catFromUrl || "all");
+  const [search, setSearch] = useState("");
+  const [selectedSize, setSelectedSize] = useState("all");
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -624,6 +863,38 @@ export default function ProductsPage() {
     }
   }, [activeCat, categories]);
 
+  useEffect(() => {
+    setSearch("");
+    setSelectedSize("all");
+  }, [activeCat]);
+
+  const availableSizes = useMemo(() => {
+    let list = [...products];
+
+    if (activeCat !== "all") {
+      list = list.filter((p) => canonicalCategory(p.category) === activeCat);
+    }
+
+    const uniqueSizes = Array.from(
+      new Set(
+        list
+          .map((p) => String(p.size || "").trim())
+          .filter((size) => size && size !== "—")
+      )
+    );
+
+    return [
+      "all",
+      ...uniqueSizes.sort((a, b) => {
+        const na = parseFloat(a);
+        const nb = parseFloat(b);
+
+        if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+        return a.localeCompare(b);
+      }),
+    ];
+  }, [products, activeCat]);
+
   const filtered = useMemo(() => {
     let list = [...products];
 
@@ -631,8 +902,28 @@ export default function ProductsPage() {
       list = list.filter((p) => canonicalCategory(p.category) === activeCat);
     }
 
+    if (selectedSize !== "all") {
+      list = list.filter((p) => String(p.size || "").trim() === selectedSize);
+    }
+
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p) => {
+        const values = [
+          p.name,
+          p.brand,
+          p.size,
+          p.badge,
+          p.category,
+          catLabel(p.category, categories),
+        ];
+
+        return values.some((v) => String(v || "").toLowerCase().includes(q));
+      });
+    }
+
     return list;
-  }, [activeCat, products]);
+  }, [activeCat, selectedSize, products, search, categories]);
 
   const cartCount = useMemo(() => {
     return (items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0);
@@ -695,6 +986,9 @@ export default function ProductsPage() {
     activeCat === "all"
       ? "All Tires"
       : `${catLabel(activeCat, categories)} Tires`;
+
+  const activeCategoryLabel =
+    activeCat === "all" ? "All Tires" : catLabel(activeCat, categories);
 
   return (
     <main className="min-h-screen bg-[#070707] pb-28 text-white sm:pb-24">
@@ -781,6 +1075,33 @@ export default function ProductsPage() {
               })}
         </div>
 
+        <ProductToolbar
+          search={search}
+          setSearch={setSearch}
+          selectedSize={selectedSize}
+          setSelectedSize={setSelectedSize}
+          availableSizes={availableSizes}
+          activeCategoryLabel={activeCategoryLabel}
+        />
+
+        <div className="mb-8 flex flex-wrap items-center gap-2 text-sm text-white/55">
+          <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+            Showing {filtered.length} product{filtered.length !== 1 ? "s" : ""}
+          </span>
+
+          {selectedSize !== "all" ? (
+            <span className="rounded-full border border-[#f7c25a]/20 bg-[#f7c25a]/10 px-3 py-1.5 text-[#f7c25a]">
+              Size: {formatSizeLabel(selectedSize)}
+            </span>
+          ) : null}
+
+          {search.trim() ? (
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+              Search: “{search.trim()}”
+            </span>
+          ) : null}
+        </div>
+
         {loading ? (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -806,14 +1127,29 @@ export default function ProductsPage() {
               No tires found
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/65">
-              Try another category.
+              Try a different search term, choose another size, or clear filters.
             </p>
-            <button
-              onClick={() => handleCategoryClick("all")}
-              className="mt-6 rounded-2xl bg-[#f7c25a] px-6 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
-            >
-              Show All Tires
-            </button>
+
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {(search.trim() || selectedSize !== "all") && (
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedSize("all");
+                  }}
+                  className="rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/[0.1]"
+                >
+                  Clear Filters
+                </button>
+              )}
+
+              <button
+                onClick={() => handleCategoryClick("all")}
+                className="rounded-2xl bg-[#f7c25a] px-6 py-3 text-sm font-extrabold text-black transition hover:brightness-110"
+              >
+                Show All Tires
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
